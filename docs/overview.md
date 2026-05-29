@@ -5,5 +5,7 @@ designing a Ruby client for Apache Pulsar.
 
 ## Contents
 
+- [Design](design/overview.md): Design notes and implementation decisions for
+  the Ruby client.
 - [Research](research/overview.md): Research notes, references, and findings
   that inform the client design.
