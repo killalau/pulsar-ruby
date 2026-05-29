@@ -68,6 +68,8 @@ Why:
 ## Concurrency Model
 
 Decision: use a background network thread plus internal queues for the MVP.
+See [Concurrency Model Analysis](concurrency-model.md) for the detailed
+tradeoff report.
 
 The public API can be blocking, while the connection thread continuously reads
 broker frames and dispatches responses or messages to internal structures.
