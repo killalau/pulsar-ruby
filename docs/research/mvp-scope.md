@@ -5,8 +5,8 @@ Pulsar client.
 
 ## Current Status
 
-Initial MVP scope is based on the Java client baseline and should be refined
-after comparing more official clients.
+Initial MVP scope is based on the Java, C++, Go, and DotPulsar client baselines
+and should be refined after comparing more official clients.
 
 ## Proposed MVP
 
@@ -23,6 +23,12 @@ The first Ruby client should support:
 - Acknowledge messages.
 - Maintain consumer flow permits.
 - Enforce basic producer and consumer queue limits.
+- Keep protocol command construction separate from socket IO.
+- Keep lookup separate from producer and consumer implementation.
+- Add an internal request/response correlation layer with request IDs and
+  operation timeouts.
+- Allow blocking send and receive calls to take timeout or cancellation options.
+- Track explicit internal states for connections, producers, and consumers.
 - Reconnect enough to recover from a dropped broker connection in simple cases.
 - Run integration tests against a local Pulsar standalone broker.
 
