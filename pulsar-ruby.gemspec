@@ -3,14 +3,14 @@
 require_relative "lib/pulsar/version"
 
 Gem::Specification.new do |spec|
-  spec.name = "pulsar-ruby-client"
+  spec.name = "pulsar-ruby"
   spec.version = Pulsar::VERSION
   spec.authors = ["Franky Lau"]
   spec.email = []
 
   spec.summary = "Pure Ruby Apache Pulsar client"
   spec.description = "A pure Ruby client for Apache Pulsar."
-  spec.homepage = "https://github.com/frankylau/pulsar-ruby-client"
+  spec.homepage = "https://github.com/killalau/pulsar-ruby"
   spec.license = "Apache-2.0"
   spec.required_ruby_version = ">= 3.0"
 
