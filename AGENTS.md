@@ -21,3 +21,18 @@ link path from `docs/overview.md`.
 
 Prefer short descriptions in overview files. They should help readers decide
 where to go next, not duplicate the target document.
+
+## Development Rules
+
+Use test-driven development for implementation work.
+
+For each new behavior or bug fix:
+
+- Write or update a focused failing test first.
+- Run the targeted test and confirm it fails for the expected reason.
+- Implement the smallest change that makes the test pass.
+- Re-run the targeted test.
+- Run the broader relevant test suite before committing.
+
+Do not skip the red test step unless the change is documentation-only,
+configuration-only, or otherwise cannot reasonably be tested.
