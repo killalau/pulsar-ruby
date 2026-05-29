@@ -1,1 +1,4 @@
 .research/
+.bundle/
+.rspec_status
+*.gem
