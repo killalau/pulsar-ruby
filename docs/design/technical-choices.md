@@ -38,6 +38,8 @@ performance or protocol complexity.
 ## Public API Style
 
 Decision: use a Ruby keyword/options API instead of Java-style builders.
+See [Public API And Class Model](public-api-and-class-model.md) for the proposed
+public classes and internal boundaries.
 
 Target MVP shape:
 
