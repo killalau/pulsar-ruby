@@ -103,6 +103,8 @@ Deferred:
 ## Protobuf Strategy
 
 Decision: use generated Ruby classes with the `google-protobuf` gem.
+See [Protocol Definitions](protocol-definitions.md) for the vendored proto
+source, generation command, generated files, and dependency constraint.
 
 Why:
 
