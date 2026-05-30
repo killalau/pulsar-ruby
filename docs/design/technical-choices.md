@@ -180,6 +180,8 @@ Avoid for MVP:
 ## Frame Encoding
 
 Decision: implement Pulsar frame encoding and decoding in Ruby.
+See [Frame Codec](frame-codec.md) for the implemented command and message frame
+shapes, validation behavior, and deferred codec features.
 
 MVP frame work:
 

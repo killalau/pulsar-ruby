@@ -11,6 +11,8 @@ require_relative "pulsar/internal"
 require_relative "pulsar/internal/promise"
 require_relative "pulsar/internal/bounded_queue"
 require_relative "pulsar/internal/thread_runtime"
+require_relative "pulsar/proto/pulsar_api_pb"
+require_relative "pulsar/internal/frame_codec"
 
 module Pulsar
 end
