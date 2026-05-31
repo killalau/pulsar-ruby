@@ -83,4 +83,20 @@ RSpec.describe Pulsar::Internal::CommandFactory do
     expect(command.lookupTopic.topic).to eq("persistent://public/default/test")
     expect(command.lookupTopic.request_id).to eq(99)
   end
+
+  it "builds close producer commands" do
+    command = described_class.close_producer(producer_id: 11, request_id: 22)
+
+    expect(command.type).to eq(:CLOSE_PRODUCER)
+    expect(command.close_producer.producer_id).to eq(11)
+    expect(command.close_producer.request_id).to eq(22)
+  end
+
+  it "builds close consumer commands" do
+    command = described_class.close_consumer(consumer_id: 11, request_id: 22)
+
+    expect(command.type).to eq(:CLOSE_CONSUMER)
+    expect(command.close_consumer.consumer_id).to eq(11)
+    expect(command.close_consumer.request_id).to eq(22)
+  end
 end

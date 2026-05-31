@@ -85,6 +85,26 @@ module Pulsar
           )
         )
       end
+
+      def self.close_producer(producer_id:, request_id:)
+        Proto::BaseCommand.new(
+          type: :CLOSE_PRODUCER,
+          close_producer: Proto::CommandCloseProducer.new(
+            producer_id: producer_id,
+            request_id: request_id
+          )
+        )
+      end
+
+      def self.close_consumer(consumer_id:, request_id:)
+        Proto::BaseCommand.new(
+          type: :CLOSE_CONSUMER,
+          close_consumer: Proto::CommandCloseConsumer.new(
+            consumer_id: consumer_id,
+            request_id: request_id
+          )
+        )
+      end
     end
   end
 end

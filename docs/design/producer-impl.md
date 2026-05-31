@@ -11,6 +11,8 @@ This document records the first internal producer implementation for the MVP.
 - Tracking producer sequence IDs.
 - Sending one unbatched payload with message metadata.
 - Mapping `CommandSendReceipt` into public `Pulsar::MessageId`.
+- Closing broker-side producers with `CommandCloseProducer`.
+- Rejecting sends after close.
 
 The connection now also supports:
 
@@ -28,7 +30,6 @@ creation, and send receipt sequence, `producer.send` returns a public
 
 Remaining producer MVP work:
 
-- Producer close command.
 - Pending send limits.
 - Send error mapping.
 - Reconnect behavior.

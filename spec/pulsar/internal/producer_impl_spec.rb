@@ -16,6 +16,8 @@ RSpec.describe Pulsar::Internal::ProducerImpl do
 
     def request(command, timeout:)
       @requests << [command, timeout]
+      return success_response(command.close_producer.request_id) if command.type == :CLOSE_PRODUCER
+
       Pulsar::Proto::BaseCommand.new(
         type: :PRODUCER_SUCCESS,
         producer_success: Pulsar::Proto::CommandProducerSuccess.new(
@@ -35,6 +37,15 @@ RSpec.describe Pulsar::Internal::ProducerImpl do
           sequence_id: command["send"].sequence_id,
           message_id: Pulsar::Proto::MessageIdData.new(ledgerId: 10, entryId: 20, partition: -1, batch_index: -1)
         )
+      )
+    end
+
+    private
+
+    def success_response(request_id)
+      Pulsar::Proto::BaseCommand.new(
+        type: :SUCCESS,
+        success: Pulsar::Proto::CommandSuccess.new(request_id: request_id)
       )
     end
   end
@@ -57,5 +68,37 @@ RSpec.describe Pulsar::Internal::ProducerImpl do
     expect(connection.messages.first[1].properties.first.key).to eq("kind")
     expect(connection.messages.first[2]).to eq("hello")
     expect(message_id).to eq(Pulsar::MessageId.new(ledger_id: 10, entry_id: 20))
+  end
+
+  it "closes broker-side producers idempotently" do
+    connection = FakeProducerConnection.new
+    producer = described_class.create(
+      connection: connection,
+      topic: "persistent://public/default/test",
+      producer_id: 7,
+      operation_timeout: 5
+    )
+
+    producer.close
+    producer.close
+
+    close_requests = connection.requests.select { |command, _timeout| command.type == :CLOSE_PRODUCER }
+    expect(close_requests.size).to eq(1)
+    expect(close_requests.first.first.close_producer.producer_id).to eq(7)
+    expect(producer).to be_closed
+  end
+
+  it "rejects sends after close" do
+    connection = FakeProducerConnection.new
+    producer = described_class.create(
+      connection: connection,
+      topic: "persistent://public/default/test",
+      producer_id: 7,
+      operation_timeout: 5
+    )
+
+    producer.close
+
+    expect { producer.send("hello") }.to raise_error(Pulsar::ClosedError)
   end
 end

@@ -16,9 +16,14 @@ RSpec.describe Pulsar::Internal::ConsumerImpl do
 
     def request(command, timeout:)
       @requests << [command, timeout]
+      request_id = if command.type == :CLOSE_CONSUMER
+                     command.close_consumer.request_id
+                   else
+                     command.subscribe.request_id
+                   end
       Pulsar::Proto::BaseCommand.new(
         type: :SUCCESS,
-        success: Pulsar::Proto::CommandSuccess.new(request_id: command.subscribe.request_id)
+        success: Pulsar::Proto::CommandSuccess.new(request_id: request_id)
       )
     end
 
@@ -64,5 +69,43 @@ RSpec.describe Pulsar::Internal::ConsumerImpl do
     expect(message.properties).to eq("kind" => "created")
     expect(connection.requests.first.first.type).to eq(:SUBSCRIBE)
     expect(connection.writes.map(&:type)).to include(:FLOW, :ACK)
+  end
+
+  it "closes broker-side consumers idempotently" do
+    connection = FakeConsumerConnection.new
+    consumer = described_class.create(
+      connection: connection,
+      topic: "persistent://public/default/test",
+      subscription: "ruby-sub",
+      consumer_id: 9,
+      operation_timeout: 5,
+      receiver_queue_size: 10
+    )
+
+    consumer.close
+    consumer.close
+
+    close_requests = connection.requests.select { |command, _timeout| command.type == :CLOSE_CONSUMER }
+    expect(close_requests.size).to eq(1)
+    expect(close_requests.first.first.close_consumer.consumer_id).to eq(9)
+    expect(consumer).to be_closed
+  end
+
+  it "rejects receive and ack after close" do
+    connection = FakeConsumerConnection.new
+    consumer = described_class.create(
+      connection: connection,
+      topic: "persistent://public/default/test",
+      subscription: "ruby-sub",
+      consumer_id: 9,
+      operation_timeout: 5,
+      receiver_queue_size: 10
+    )
+
+    consumer.close
+
+    message_id = Pulsar::MessageId.new(ledger_id: 1, entry_id: 2)
+    expect { consumer.receive(timeout: 1) }.to raise_error(Pulsar::ClosedError)
+    expect { consumer.ack(message_id) }.to raise_error(Pulsar::ClosedError)
   end
 end

@@ -11,6 +11,8 @@ This document records the first internal consumer implementation for the MVP.
 - Decoding incoming `CommandMessage` data into public `Pulsar::Message`.
 - Receiving messages from an internal bounded queue.
 - Sending individual ack commands.
+- Closing broker-side consumers with `CommandCloseConsumer`.
+- Rejecting receive, ack, flow, and pushed message handling after close.
 
 The connection now also supports:
 
@@ -27,7 +29,6 @@ decodes it, queues it, and returns the message.
 Remaining consumer MVP work:
 
 - Background connection reader routing broker-pushed messages to consumers.
-- Consumer close command.
 - Receive queue replenishment policy.
 - Redelivery and negative ack behavior.
 - Integration test against real Pulsar standalone.

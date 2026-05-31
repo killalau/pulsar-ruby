@@ -11,10 +11,10 @@ This folder contains design notes for the Ruby Apache Pulsar client.
   handshake, request ID allocation, simple request/response behavior, and
   remaining connection work.
 - [Command Factory](command-factory.md): Internal protobuf command construction
-  for producer, send, subscribe, flow, and ack commands.
+  for producer, send, subscribe, flow, ack, lookup, and close commands.
 - [Consumer Implementation](consumer-impl.md): Internal subscription creation,
-  flow permits, queued receive behavior, ack commands, and remaining consumer
-  work.
+  flow permits, queued receive behavior, ack and close commands, and remaining
+  consumer work.
 - [Frame Codec](frame-codec.md): Implemented binary frame encoding and decoding
   behavior, current limits, and validation rules.
 - [Lookup Service](lookup-service.md): Binary topic lookup behavior, current
@@ -25,7 +25,8 @@ This folder contains design notes for the Ruby Apache Pulsar client.
 - [Protocol Definitions](protocol-definitions.md): Source, generation workflow,
   packaging rule, and runtime dependency notes for Pulsar protobuf classes.
 - [Producer Implementation](producer-impl.md): Internal producer creation,
-  unbatched send behavior, message receipt mapping, and remaining producer work.
+  unbatched send behavior, message receipt mapping, close commands, and
+  remaining producer work.
 - [Technical Choices](technical-choices.md): Analysis and recommended decisions
   for Ruby implementation choices before gem scaffolding.
 - [TCP Transport](tcp-transport.md): Plaintext TCP transport boundary,

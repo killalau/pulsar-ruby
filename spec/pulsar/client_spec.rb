@@ -107,6 +107,13 @@ RSpec.describe Pulsar::Client do
         )
       )
       socket.write(Pulsar::Internal::FrameCodec.encode_command(receipt))
+
+      close_command = Pulsar::Internal::FrameCodec.decode_frame(read_frame(socket)).command
+      close_success = Pulsar::Proto::BaseCommand.new(
+        type: :SUCCESS,
+        success: Pulsar::Proto::CommandSuccess.new(request_id: close_command.close_producer.request_id)
+      )
+      socket.write(Pulsar::Internal::FrameCodec.encode_command(close_success))
       socket.read
     end
     client = described_class.new("pulsar://127.0.0.1:#{port}", operation_timeout: 1, connection_timeout: 1)
@@ -166,6 +173,13 @@ RSpec.describe Pulsar::Client do
       socket.write(Pulsar::Internal::FrameCodec.encode_message(message_command, metadata, "hello-consumer"))
 
       ack_command = Pulsar::Internal::FrameCodec.decode_frame(read_frame(socket)).command
+
+      close_command = Pulsar::Internal::FrameCodec.decode_frame(read_frame(socket)).command
+      close_success = Pulsar::Proto::BaseCommand.new(
+        type: :SUCCESS,
+        success: Pulsar::Proto::CommandSuccess.new(request_id: close_command.close_consumer.request_id)
+      )
+      socket.write(Pulsar::Internal::FrameCodec.encode_command(close_success))
       socket.read
     end
     client = described_class.new("pulsar://127.0.0.1:#{port}", operation_timeout: 1, connection_timeout: 1)

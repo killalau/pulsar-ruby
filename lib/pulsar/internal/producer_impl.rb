@@ -31,9 +31,12 @@ module Pulsar
         @operation_timeout = operation_timeout
         @sequence_id = -1
         @mutex = Mutex.new
+        @closed = false
       end
 
       def send(payload, properties: {}, key: nil, event_time: nil, timeout: nil)
+        raise ClosedError, "producer is closed" if closed?
+
         sequence_id = next_sequence_id
         command, metadata = CommandFactory.send_message(
           producer_id: producer_id,
@@ -54,7 +57,19 @@ module Pulsar
       end
 
       def close
+        return nil if closed?
+
+        request_id = @connection.next_request_id
+        command = CommandFactory.close_producer(producer_id: producer_id, request_id: request_id)
+        response = @connection.request(command, timeout: @operation_timeout)
+        raise BrokerError, "producer close failed: #{response.type}" unless response.type == :SUCCESS
+
+        @closed = true
         nil
+      end
+
+      def closed?
+        @closed
       end
 
       private
