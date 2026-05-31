@@ -10,6 +10,8 @@ This folder contains design notes for the Ruby Apache Pulsar client.
 - [Connection Handshake](connection-handshake.md): Implemented connect
   handshake, request ID allocation, simple request/response behavior, and
   remaining connection work.
+- [Command Factory](command-factory.md): Internal protobuf command construction
+  for producer, send, subscribe, flow, and ack commands.
 - [Frame Codec](frame-codec.md): Implemented binary frame encoding and decoding
   behavior, current limits, and validation rules.
 - [Public API And Class Model](public-api-and-class-model.md): Proposed public

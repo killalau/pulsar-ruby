@@ -184,6 +184,8 @@ Avoid for MVP:
 Decision: implement Pulsar frame encoding and decoding in Ruby.
 See [Frame Codec](frame-codec.md) for the implemented command and message frame
 shapes, validation behavior, and deferred codec features.
+See [Command Factory](command-factory.md) for the internal protobuf command
+builder used by producer and consumer paths.
 
 MVP frame work:
 
