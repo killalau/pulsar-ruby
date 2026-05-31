@@ -72,4 +72,15 @@ RSpec.describe Pulsar::Internal::CommandFactory do
     expect(command.ack.message_id.first.ledgerId).to eq(1)
     expect(command.ack.message_id.first.entryId).to eq(2)
   end
+
+  it "builds lookup commands" do
+    command = described_class.lookup(
+      topic: "persistent://public/default/test",
+      request_id: 99
+    )
+
+    expect(command.type).to eq(:LOOKUP)
+    expect(command.lookupTopic.topic).to eq("persistent://public/default/test")
+    expect(command.lookupTopic.request_id).to eq(99)
+  end
 end

@@ -39,6 +39,7 @@ module Pulsar
 
     def producer(topic:, **_options)
       ensure_open!
+      lookup_topic(topic)
 
       impl = Internal::ProducerImpl.create(
         connection: connection,
@@ -51,6 +52,7 @@ module Pulsar
 
     def consumer(topic:, subscription:, **_options)
       ensure_open!
+      lookup_topic(topic)
 
       impl = Internal::ConsumerImpl.create(
         connection: connection,
@@ -92,6 +94,10 @@ module Pulsar
         operation_timeout: operation_timeout,
         client_version: "pulsar-ruby/#{VERSION}"
       )
+    end
+
+    def lookup_topic(topic)
+      Internal::LookupService.new(connection: connection, operation_timeout: operation_timeout).lookup(topic)
     end
 
     def next_producer_id

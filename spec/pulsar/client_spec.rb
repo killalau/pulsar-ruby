@@ -71,6 +71,17 @@ RSpec.describe Pulsar::Client do
       )
       socket.write(Pulsar::Internal::FrameCodec.encode_command(connected))
 
+      lookup_command = Pulsar::Internal::FrameCodec.decode_frame(read_frame(socket)).command
+      lookup_response = Pulsar::Proto::BaseCommand.new(
+        type: :LOOKUP_RESPONSE,
+        lookupTopicResponse: Pulsar::Proto::CommandLookupTopicResponse.new(
+          request_id: lookup_command.lookupTopic.request_id,
+          response: :Connect,
+          brokerServiceUrl: "pulsar://127.0.0.1:#{port}"
+        )
+      )
+      socket.write(Pulsar::Internal::FrameCodec.encode_command(lookup_response))
+
       producer_command = Pulsar::Internal::FrameCodec.decode_frame(read_frame(socket)).command
       producer_success = Pulsar::Proto::BaseCommand.new(
         type: :PRODUCER_SUCCESS,
@@ -118,6 +129,17 @@ RSpec.describe Pulsar::Client do
         connected: Pulsar::Proto::CommandConnected.new(server_version: "fake-broker", protocol_version: 21)
       )
       socket.write(Pulsar::Internal::FrameCodec.encode_command(connected))
+
+      lookup_command = Pulsar::Internal::FrameCodec.decode_frame(read_frame(socket)).command
+      lookup_response = Pulsar::Proto::BaseCommand.new(
+        type: :LOOKUP_RESPONSE,
+        lookupTopicResponse: Pulsar::Proto::CommandLookupTopicResponse.new(
+          request_id: lookup_command.lookupTopic.request_id,
+          response: :Connect,
+          brokerServiceUrl: "pulsar://127.0.0.1:#{port}"
+        )
+      )
+      socket.write(Pulsar::Internal::FrameCodec.encode_command(lookup_response))
 
       subscribe_command = Pulsar::Internal::FrameCodec.decode_frame(read_frame(socket)).command
       success = Pulsar::Proto::BaseCommand.new(

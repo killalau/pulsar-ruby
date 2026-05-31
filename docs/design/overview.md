@@ -17,6 +17,8 @@ This folder contains design notes for the Ruby Apache Pulsar client.
   work.
 - [Frame Codec](frame-codec.md): Implemented binary frame encoding and decoding
   behavior, current limits, and validation rules.
+- [Lookup Service](lookup-service.md): Binary topic lookup behavior, current
+  client wiring, and remaining lookup limitations.
 - [Public API And Class Model](public-api-and-class-model.md): Proposed public
   Ruby API, public/internal class responsibilities, ownership rules, lifecycle
   states, and extension points before gem scaffolding.

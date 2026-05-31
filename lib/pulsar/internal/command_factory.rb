@@ -75,6 +75,16 @@ module Pulsar
           )
         )
       end
+
+      def self.lookup(topic:, request_id:)
+        Proto::BaseCommand.new(
+          type: :LOOKUP,
+          lookupTopic: Proto::CommandLookupTopic.new(
+            topic: topic,
+            request_id: request_id
+          )
+        )
+      end
     end
   end
 end

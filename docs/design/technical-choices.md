@@ -129,6 +129,7 @@ Open follow-up:
 Decision: use Ruby stdlib `TCPSocket` for MVP `pulsar://` support.
 See [TCP Transport](tcp-transport.md) for the implemented plaintext transport
 boundary and error mapping.
+See [Lookup Service](lookup-service.md) for the first binary topic lookup path.
 
 Why:
 
