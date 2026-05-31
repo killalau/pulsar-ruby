@@ -26,18 +26,26 @@ module Pulsar
       validate_unsupported_options!(options)
 
       @service_url = normalize_service_url(service_url)
+      @service_uri = URI(@service_url)
       @operation_timeout = operation_timeout
       @connection_timeout = connection_timeout
       @logger = logger
       @producers = Set.new
       @consumers = Set.new
       @closed = false
+      @producer_id = 0
     end
 
     def producer(topic:, **_options)
       ensure_open!
 
-      Producer.new(topic: topic).tap { |producer| @producers.add(producer) }
+      impl = Internal::ProducerImpl.create(
+        connection: connection,
+        topic: topic,
+        producer_id: next_producer_id,
+        operation_timeout: operation_timeout
+      )
+      Producer.new(topic: topic, impl: impl).tap { |producer| @producers.add(producer) }
     end
 
     def consumer(topic:, subscription:, **_options)
@@ -52,6 +60,7 @@ module Pulsar
       @closed = true
       close_all(@producers)
       close_all(@consumers)
+      @connection&.close
       nil
     end
 
@@ -64,6 +73,20 @@ module Pulsar
     def close_all(resources)
       resources.each(&:close)
       resources.clear
+    end
+
+    def connection
+      @connection ||= Internal::Connection.connect(
+        host: @service_uri.host,
+        port: @service_uri.port || 6650,
+        connection_timeout: connection_timeout,
+        operation_timeout: operation_timeout,
+        client_version: "pulsar-ruby/#{VERSION}"
+      )
+    end
+
+    def next_producer_id
+      @producer_id += 1
     end
 
     def ensure_open!

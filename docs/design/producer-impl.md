@@ -21,12 +21,13 @@ response.
 
 ## Current Limits
 
-This is still an internal implementation layer. Public `Client#producer` is not
-yet wired to a real broker connection.
+Public `Client#producer` is now wired to the internal connection and producer
+implementation. Against a broker that supports the simple connect, producer
+creation, and send receipt sequence, `producer.send` returns a public
+`Pulsar::MessageId`.
 
 Remaining producer MVP work:
 
-- Public client wiring.
 - Producer close command.
 - Pending send limits.
 - Send error mapping.
