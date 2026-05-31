@@ -16,3 +16,5 @@ This folder contains design notes for the Ruby Apache Pulsar client.
   packaging rule, and runtime dependency notes for Pulsar protobuf classes.
 - [Technical Choices](technical-choices.md): Analysis and recommended decisions
   for Ruby implementation choices before gem scaffolding.
+- [TCP Transport](tcp-transport.md): Plaintext TCP transport boundary,
+  implemented behavior, error mapping, and deferred transport features.

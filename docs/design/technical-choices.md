@@ -127,6 +127,8 @@ Open follow-up:
 ## Socket And TLS Layer
 
 Decision: use Ruby stdlib `TCPSocket` for MVP `pulsar://` support.
+See [TCP Transport](tcp-transport.md) for the implemented plaintext transport
+boundary and error mapping.
 
 Why:
 
