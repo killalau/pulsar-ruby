@@ -51,7 +51,16 @@ module Pulsar
       end
 
       def receive(timeout: nil)
-        @receiver_queue.pop(timeout: timeout || @operation_timeout)
+        wait_timeout = timeout || @operation_timeout
+        begin
+          return @receiver_queue.pop(timeout: 0.001)
+        rescue TimeoutError
+          decoded = @connection.read_frame(timeout: wait_timeout)
+          raise ProtocolError, "expected MESSAGE frame, got #{decoded.command.type}" unless decoded.command.type == :MESSAGE
+
+          handle_message(decoded.command.message, decoded.headers_and_payload)
+          @receiver_queue.pop(timeout: wait_timeout)
+        end
       end
 
       def ack(message_or_message_id)

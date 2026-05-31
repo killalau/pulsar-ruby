@@ -19,12 +19,13 @@ The connection now also supports:
 
 ## Current Limits
 
-This is still an internal implementation layer. Public `Client#consumer` is not
-yet wired to a real broker connection or background reader.
+Public `Client#consumer` is now wired to the internal connection and consumer
+implementation. The current MVP receive path is synchronous: if the local queue
+is empty, `consumer.receive` reads one broker-pushed frame from the connection,
+decodes it, queues it, and returns the message.
 
 Remaining consumer MVP work:
 
-- Public client wiring.
 - Background connection reader routing broker-pushed messages to consumers.
 - Consumer close command.
 - Receive queue replenishment policy.

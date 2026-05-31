@@ -34,6 +34,7 @@ module Pulsar
       @consumers = Set.new
       @closed = false
       @producer_id = 0
+      @consumer_id = 0
     end
 
     def producer(topic:, **_options)
@@ -51,7 +52,15 @@ module Pulsar
     def consumer(topic:, subscription:, **_options)
       ensure_open!
 
-      Consumer.new(topic: topic, subscription: subscription).tap { |consumer| @consumers.add(consumer) }
+      impl = Internal::ConsumerImpl.create(
+        connection: connection,
+        topic: topic,
+        subscription: subscription,
+        consumer_id: next_consumer_id,
+        operation_timeout: operation_timeout,
+        receiver_queue_size: 1000
+      )
+      Consumer.new(topic: topic, subscription: subscription, impl: impl).tap { |consumer| @consumers.add(consumer) }
     end
 
     def close
@@ -87,6 +96,10 @@ module Pulsar
 
     def next_producer_id
       @producer_id += 1
+    end
+
+    def next_consumer_id
+      @consumer_id += 1
     end
 
     def ensure_open!

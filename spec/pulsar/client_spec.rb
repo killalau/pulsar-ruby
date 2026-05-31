@@ -54,24 +54,6 @@ RSpec.describe Pulsar::Client do
       .to raise_error(Pulsar::ConfigurationError, /pulsar:\/\//)
   end
 
-  it "creates consumer shells" do
-    client = described_class.new("pulsar://localhost:6650")
-
-    consumer = client.consumer(topic: "persistent://public/default/test", subscription: "ruby-sub")
-
-    expect(consumer.topic).to eq("persistent://public/default/test")
-    expect(consumer.subscription).to eq("ruby-sub")
-  end
-
-  it "closes owned consumer shells" do
-    client = described_class.new("pulsar://localhost:6650")
-    consumer = client.consumer(topic: "persistent://public/default/test", subscription: "ruby-sub")
-
-    client.close
-
-    expect(consumer).to be_closed
-  end
-
   it "rejects new resources after close" do
     client = described_class.new("pulsar://localhost:6650")
     client.close
@@ -125,5 +107,56 @@ RSpec.describe Pulsar::Client do
 
     client.close
     server_thread.join
+  end
+
+  it "creates a real consumer, receives a message, and acks it" do
+    ack_command = nil
+    port, server_thread = with_fake_broker do |socket|
+      read_frame(socket)
+      connected = Pulsar::Proto::BaseCommand.new(
+        type: :CONNECTED,
+        connected: Pulsar::Proto::CommandConnected.new(server_version: "fake-broker", protocol_version: 21)
+      )
+      socket.write(Pulsar::Internal::FrameCodec.encode_command(connected))
+
+      subscribe_command = Pulsar::Internal::FrameCodec.decode_frame(read_frame(socket)).command
+      success = Pulsar::Proto::BaseCommand.new(
+        type: :SUCCESS,
+        success: Pulsar::Proto::CommandSuccess.new(request_id: subscribe_command.subscribe.request_id)
+      )
+      socket.write(Pulsar::Internal::FrameCodec.encode_command(success))
+
+      flow_command = Pulsar::Internal::FrameCodec.decode_frame(read_frame(socket)).command
+      expect(flow_command.type).to eq(:FLOW)
+
+      message_command = Pulsar::Proto::BaseCommand.new(
+        type: :MESSAGE,
+        message: Pulsar::Proto::CommandMessage.new(
+          consumer_id: subscribe_command.subscribe.consumer_id,
+          message_id: Pulsar::Proto::MessageIdData.new(ledgerId: 30, entryId: 40, partition: -1, batch_index: -1)
+        )
+      )
+      metadata = Pulsar::Proto::MessageMetadata.new(
+        producer_name: "fake-producer",
+        sequence_id: 1,
+        publish_time: 123
+      )
+      socket.write(Pulsar::Internal::FrameCodec.encode_message(message_command, metadata, "hello-consumer"))
+
+      ack_command = Pulsar::Internal::FrameCodec.decode_frame(read_frame(socket)).command
+      socket.read
+    end
+    client = described_class.new("pulsar://127.0.0.1:#{port}", operation_timeout: 1, connection_timeout: 1)
+
+    consumer = client.consumer(topic: "persistent://public/default/test", subscription: "ruby-sub")
+    message = consumer.receive(timeout: 1)
+    consumer.ack(message)
+
+    expect(message.payload).to eq("hello-consumer")
+    expect(message.message_id).to eq(Pulsar::MessageId.new(ledger_id: 30, entry_id: 40))
+
+    client.close
+    server_thread.join
+    expect(ack_command.type).to eq(:ACK)
   end
 end

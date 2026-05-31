@@ -92,6 +92,14 @@ module Pulsar
         end
       end
 
+      def read_frame(timeout: @operation_timeout)
+        ensure_connected!
+
+        @mutex.synchronize do
+          read_decoded_frame(timeout: timeout)
+        end
+      end
+
       private
 
       def write_connect_command
@@ -106,10 +114,14 @@ module Pulsar
       end
 
       def read_command(timeout:)
+        read_decoded_frame(timeout: timeout).command
+      end
+
+      def read_decoded_frame(timeout:)
         size_prefix = @transport.read_exact(4, timeout: timeout)
         size = size_prefix.unpack1("N")
         frame = size_prefix + @transport.read_exact(size, timeout: timeout)
-        FrameCodec.decode_frame(frame).command
+        FrameCodec.decode_frame(frame)
       end
 
       def ensure_connected!
