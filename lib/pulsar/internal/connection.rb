@@ -75,6 +75,15 @@ module Pulsar
         end
       end
 
+      def send_message(command, metadata, payload, timeout: @operation_timeout)
+        ensure_connected!
+
+        @mutex.synchronize do
+          @transport.write(FrameCodec.encode_message(command, metadata, payload))
+          read_command(timeout: timeout)
+        end
+      end
+
       private
 
       def write_connect_command

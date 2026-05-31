@@ -160,4 +160,51 @@ RSpec.describe Pulsar::Internal::Connection do
     connection.close
     server_thread.join
   end
+
+  it "sends message frames and returns the broker response" do
+    port, server_thread = with_fake_broker do |socket|
+      read_frame(socket)
+      connected = Pulsar::Proto::BaseCommand.new(
+        type: :CONNECTED,
+        connected: Pulsar::Proto::CommandConnected.new(server_version: "fake-broker", protocol_version: 21)
+      )
+      socket.write(Pulsar::Internal::FrameCodec.encode_command(connected))
+
+      decoded = Pulsar::Internal::FrameCodec.decode_frame(read_frame(socket))
+      message = Pulsar::Internal::FrameCodec.decode_message_data(decoded.headers_and_payload)
+      expect(decoded.command.type).to eq(:SEND)
+      expect(message.payload).to eq("hello")
+
+      receipt = Pulsar::Proto::BaseCommand.new(
+        type: :SEND_RECEIPT,
+        send_receipt: Pulsar::Proto::CommandSendReceipt.new(
+          producer_id: 1,
+          sequence_id: 0,
+          message_id: Pulsar::Proto::MessageIdData.new(ledgerId: 1, entryId: 2)
+        )
+      )
+      socket.write(Pulsar::Internal::FrameCodec.encode_command(receipt))
+      socket.read
+    end
+    connection = described_class.connect(
+      host: "127.0.0.1",
+      port: port,
+      connection_timeout: 1,
+      operation_timeout: 1,
+      client_version: "pulsar-ruby-test"
+    )
+    command, metadata = Pulsar::Internal::CommandFactory.send_message(
+      producer_id: 1,
+      sequence_id: 0,
+      producer_name: "ruby-producer",
+      publish_time: 1
+    )
+
+    response = connection.send_message(command, metadata, "hello", timeout: 1)
+
+    expect(response.type).to eq(:SEND_RECEIPT)
+
+    connection.close
+    server_thread.join
+  end
 end

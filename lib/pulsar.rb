@@ -16,6 +16,7 @@ require_relative "pulsar/internal/frame_codec"
 require_relative "pulsar/internal/tcp_transport"
 require_relative "pulsar/internal/connection"
 require_relative "pulsar/internal/command_factory"
+require_relative "pulsar/internal/producer_impl"
 
 module Pulsar
 end
