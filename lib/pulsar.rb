@@ -17,6 +17,7 @@ require_relative "pulsar/internal/tcp_transport"
 require_relative "pulsar/internal/connection"
 require_relative "pulsar/internal/command_factory"
 require_relative "pulsar/internal/producer_impl"
+require_relative "pulsar/internal/consumer_impl"
 
 module Pulsar
 end

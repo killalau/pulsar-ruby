@@ -84,6 +84,14 @@ module Pulsar
         end
       end
 
+      def write_command(command)
+        ensure_connected!
+
+        @mutex.synchronize do
+          @transport.write(FrameCodec.encode_command(command))
+        end
+      end
+
       private
 
       def write_connect_command

@@ -207,4 +207,33 @@ RSpec.describe Pulsar::Internal::Connection do
     connection.close
     server_thread.join
   end
+
+  it "writes command-only frames without waiting for a response" do
+    written_command = nil
+    port, server_thread = with_fake_broker do |socket|
+      read_frame(socket)
+      connected = Pulsar::Proto::BaseCommand.new(
+        type: :CONNECTED,
+        connected: Pulsar::Proto::CommandConnected.new(server_version: "fake-broker", protocol_version: 21)
+      )
+      socket.write(Pulsar::Internal::FrameCodec.encode_command(connected))
+
+      written_command = Pulsar::Internal::FrameCodec.decode_frame(read_frame(socket)).command
+      socket.read
+    end
+    connection = described_class.connect(
+      host: "127.0.0.1",
+      port: port,
+      connection_timeout: 1,
+      operation_timeout: 1,
+      client_version: "pulsar-ruby-test"
+    )
+
+    connection.write_command(Pulsar::Internal::CommandFactory.flow(consumer_id: 3, permits: 10))
+    connection.close
+    server_thread.join
+
+    expect(written_command.type).to eq(:FLOW)
+    expect(written_command.flow.consumer_id).to eq(3)
+  end
 end

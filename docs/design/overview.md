@@ -12,6 +12,9 @@ This folder contains design notes for the Ruby Apache Pulsar client.
   remaining connection work.
 - [Command Factory](command-factory.md): Internal protobuf command construction
   for producer, send, subscribe, flow, and ack commands.
+- [Consumer Implementation](consumer-impl.md): Internal subscription creation,
+  flow permits, queued receive behavior, ack commands, and remaining consumer
+  work.
 - [Frame Codec](frame-codec.md): Implemented binary frame encoding and decoding
   behavior, current limits, and validation rules.
 - [Public API And Class Model](public-api-and-class-model.md): Proposed public
