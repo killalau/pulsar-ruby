@@ -205,6 +205,8 @@ References:
 ## Testing Environment
 
 Decision: use Docker Compose with Pulsar standalone for integration tests.
+The first connection tests use a local fake broker; see
+[Connection Handshake](connection-handshake.md).
 
 Test layers:
 

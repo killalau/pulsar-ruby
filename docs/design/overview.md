@@ -7,6 +7,9 @@ This folder contains design notes for the Ruby Apache Pulsar client.
 - [Concurrency Model Analysis](concurrency-model.md): Detailed analysis of the
   recommended background-thread concurrency model, including tradeoffs,
   examples, alternatives, and Ruby-specific risks.
+- [Connection Handshake](connection-handshake.md): Implemented connect
+  handshake, request ID allocation, simple request/response behavior, and
+  remaining connection work.
 - [Frame Codec](frame-codec.md): Implemented binary frame encoding and decoding
   behavior, current limits, and validation rules.
 - [Public API And Class Model](public-api-and-class-model.md): Proposed public

@@ -14,6 +14,7 @@ require_relative "pulsar/internal/thread_runtime"
 require_relative "pulsar/proto/pulsar_api_pb"
 require_relative "pulsar/internal/frame_codec"
 require_relative "pulsar/internal/tcp_transport"
+require_relative "pulsar/internal/connection"
 
 module Pulsar
 end
