@@ -7,9 +7,9 @@ extensions). The goal is a small, idiomatic API for producing and consuming mess
 local or self-hosted broker, with room to grow into TLS, authentication, batching, and
 other features over time.
 
-**Status:** Early development. The public API and internal concurrency primitives are in
-place; broker connectivity and real `send` / `receive` / `ack` operations are not
-implemented yet.
+**Status:** Early development. The public API, protocol definitions, frame codec,
+plaintext TCP transport, and initial producer/consumer protocol paths are in place.
+Real broker integration is being brought up against Pulsar standalone.
 
 ## Requirements
 
@@ -66,6 +66,13 @@ Today, `producer.send`, `consumer.receive`, and `consumer.ack` raise
 ```bash
 bundle install
 bundle exec rspec
+```
+
+Run the local Pulsar standalone integration spec:
+
+```bash
+docker compose up -d pulsar
+PULSAR_INTEGRATION=1 bundle exec rspec spec/integration/standalone_spec.rb
 ```
 
 ### Project layout
