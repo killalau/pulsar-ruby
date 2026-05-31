@@ -37,7 +37,7 @@ module Pulsar
       @consumer_id = 0
     end
 
-    def producer(topic:, **_options)
+    def producer(topic:, max_pending_messages: 1000, **_options)
       ensure_open!
       lookup_topic(topic)
 
@@ -45,7 +45,8 @@ module Pulsar
         connection: connection,
         topic: topic,
         producer_id: next_producer_id,
-        operation_timeout: operation_timeout
+        operation_timeout: operation_timeout,
+        max_pending_messages: max_pending_messages
       )
       Producer.new(topic: topic, impl: impl).tap { |producer| @producers.add(producer) }
     end

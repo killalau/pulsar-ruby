@@ -8,7 +8,10 @@ RSpec.describe Pulsar::Internal::ProducerImpl do
       @request_id = 0
       @requests = []
       @messages = []
+      @send_delay = nil
     end
+
+    attr_writer :send_delay
 
     def next_request_id
       @request_id += 1
@@ -29,6 +32,7 @@ RSpec.describe Pulsar::Internal::ProducerImpl do
     end
 
     def send_message(command, metadata, payload, timeout:)
+      sleep @send_delay if @send_delay
       @messages << [command, metadata, payload, timeout]
       Pulsar::Proto::BaseCommand.new(
         type: :SEND_RECEIPT,
@@ -52,12 +56,13 @@ RSpec.describe Pulsar::Internal::ProducerImpl do
 
   it "creates a broker-side producer and sends one unbatched message" do
     connection = FakeProducerConnection.new
-    producer = described_class.create(
-      connection: connection,
-      topic: "persistent://public/default/test",
-      producer_id: 7,
-      operation_timeout: 5
-    )
+      producer = described_class.create(
+        connection: connection,
+        topic: "persistent://public/default/test",
+        producer_id: 7,
+        operation_timeout: 5,
+        max_pending_messages: 1000
+      )
 
     message_id = producer.send("hello", properties: { "kind" => "test" }, key: "k", event_time: 123, timeout: 2)
 
@@ -76,7 +81,8 @@ RSpec.describe Pulsar::Internal::ProducerImpl do
       connection: connection,
       topic: "persistent://public/default/test",
       producer_id: 7,
-      operation_timeout: 5
+      operation_timeout: 5,
+      max_pending_messages: 1000
     )
 
     producer.close
@@ -94,11 +100,31 @@ RSpec.describe Pulsar::Internal::ProducerImpl do
       connection: connection,
       topic: "persistent://public/default/test",
       producer_id: 7,
-      operation_timeout: 5
+      operation_timeout: 5,
+      max_pending_messages: 1000
     )
 
     producer.close
 
     expect { producer.send("hello") }.to raise_error(Pulsar::ClosedError)
+  end
+
+  it "enforces the pending send limit" do
+    connection = FakeProducerConnection.new
+    connection.send_delay = 0.05
+    producer = described_class.create(
+      connection: connection,
+      topic: "persistent://public/default/test",
+      producer_id: 7,
+      operation_timeout: 5,
+      max_pending_messages: 1
+    )
+
+    first_send = Thread.new { producer.send("first", timeout: 1) }
+    sleep 0.001 until connection.messages.empty? && first_send.status == "sleep"
+
+    expect { producer.send("second", timeout: 0.001) }.to raise_error(Pulsar::TimeoutError)
+
+    first_send.join
   end
 end

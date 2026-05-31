@@ -25,8 +25,8 @@ This folder contains design notes for the Ruby Apache Pulsar client.
 - [Protocol Definitions](protocol-definitions.md): Source, generation workflow,
   packaging rule, and runtime dependency notes for Pulsar protobuf classes.
 - [Producer Implementation](producer-impl.md): Internal producer creation,
-  unbatched send behavior, message receipt mapping, close commands, and
-  remaining producer work.
+  unbatched send behavior, message receipt mapping, close commands, pending-send
+  limits, and remaining producer work.
 - [Technical Choices](technical-choices.md): Analysis and recommended decisions
   for Ruby implementation choices before gem scaffolding.
 - [TCP Transport](tcp-transport.md): Plaintext TCP transport boundary,

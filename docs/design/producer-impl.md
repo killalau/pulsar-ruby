@@ -13,6 +13,7 @@ This document records the first internal producer implementation for the MVP.
 - Mapping `CommandSendReceipt` into public `Pulsar::MessageId`.
 - Closing broker-side producers with `CommandCloseProducer`.
 - Rejecting sends after close.
+- Enforcing a bounded pending-send limit for concurrent send calls.
 
 The connection now also supports:
 
@@ -30,7 +31,6 @@ creation, and send receipt sequence, `producer.send` returns a public
 
 Remaining producer MVP work:
 
-- Pending send limits.
 - Send error mapping.
 - Reconnect behavior.
 - Integration test against real Pulsar standalone.

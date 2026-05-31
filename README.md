@@ -42,7 +42,8 @@ require "pulsar"
 
 Pulsar::Client.open("pulsar://localhost:6650") do |client|
   producer = client.producer(
-    topic: "persistent://public/default/orders"
+    topic: "persistent://public/default/orders",
+    max_pending_messages: 1000
   )
 
   consumer = client.consumer(
