@@ -16,14 +16,16 @@ module Pulsar
         response = connection.request(command, timeout: operation_timeout)
         raise BrokerError, "subscribe failed: #{response.type}" unless response.type == :SUCCESS
 
-        new(
+        consumer = new(
           connection: connection,
           topic: topic,
           subscription: subscription,
           consumer_id: consumer_id,
           operation_timeout: operation_timeout,
           receiver_queue_size: receiver_queue_size
-        ).tap { |consumer| consumer.flow(receiver_queue_size) }
+        )
+        connection.register_consumer(consumer_id, consumer)
+        consumer.tap { |created_consumer| created_consumer.flow(receiver_queue_size) }
       end
 
       def initialize(connection:, topic:, subscription:, consumer_id:, operation_timeout:, receiver_queue_size:)
@@ -56,16 +58,7 @@ module Pulsar
       def receive(timeout: nil)
         raise ClosedError, "consumer is closed" if closed?
 
-        wait_timeout = timeout || @operation_timeout
-        begin
-          return @receiver_queue.pop(timeout: 0.001)
-        rescue TimeoutError
-          decoded = @connection.read_frame(timeout: wait_timeout)
-          raise ProtocolError, "expected MESSAGE frame, got #{decoded.command.type}" unless decoded.command.type == :MESSAGE
-
-          handle_message(decoded.command.message, decoded.headers_and_payload)
-          @receiver_queue.pop(timeout: wait_timeout)
-        end
+        @receiver_queue.pop(timeout: timeout || @operation_timeout)
       end
 
       def ack(message_or_message_id)
@@ -84,6 +77,7 @@ module Pulsar
         response = @connection.request(command, timeout: @operation_timeout)
         raise BrokerError, "consumer close failed: #{response.type}" unless response.type == :SUCCESS
 
+        @connection.unregister_consumer(consumer_id)
         @receiver_queue.close
         @closed = true
         nil

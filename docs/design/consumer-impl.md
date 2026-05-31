@@ -18,17 +18,17 @@ The connection now also supports:
 
 - `Connection#write_command(command)` for write-only commands such as flow and
   ack.
+- Consumer registration and background routing of broker-pushed messages.
 
 ## Current Limits
 
 Public `Client#consumer` is now wired to the internal connection and consumer
-implementation. The current MVP receive path is synchronous: if the local queue
-is empty, `consumer.receive` reads one broker-pushed frame from the connection,
-decodes it, queues it, and returns the message.
+implementation. Broker-pushed messages are now routed by the connection's
+background reader into the consumer queue, and `consumer.receive` waits on that
+queue.
 
 Remaining consumer MVP work:
 
-- Background connection reader routing broker-pushed messages to consumers.
 - Receive queue replenishment policy.
 - Redelivery and negative ack behavior.
 - Integration test against real Pulsar standalone.

@@ -236,4 +236,62 @@ RSpec.describe Pulsar::Internal::Connection do
     expect(written_command.type).to eq(:FLOW)
     expect(written_command.flow.consumer_id).to eq(3)
   end
+
+  it "routes broker-pushed message frames to registered consumers" do
+    consumer = Struct.new(:handled, :received_command, :received_payload) do
+      def handle_message(command_message, headers_and_payload)
+        decoded = Pulsar::Internal::FrameCodec.decode_message_data(headers_and_payload)
+        self.received_command = command_message
+        self.received_payload = decoded.payload
+        self.handled = true
+      end
+    end.new(false, nil, nil)
+
+    port, server_thread = with_fake_broker do |socket|
+      read_frame(socket)
+      connected = Pulsar::Proto::BaseCommand.new(
+        type: :CONNECTED,
+        connected: Pulsar::Proto::CommandConnected.new(server_version: "fake-broker", protocol_version: 21)
+      )
+      socket.write(Pulsar::Internal::FrameCodec.encode_command(connected))
+
+      flow_command = Pulsar::Internal::FrameCodec.decode_frame(read_frame(socket)).command
+      expect(flow_command.type).to eq(:FLOW)
+
+      message_command = Pulsar::Proto::BaseCommand.new(
+        type: :MESSAGE,
+        message: Pulsar::Proto::CommandMessage.new(
+          consumer_id: 3,
+          message_id: Pulsar::Proto::MessageIdData.new(ledgerId: 1, entryId: 2)
+        )
+      )
+      metadata = Pulsar::Proto::MessageMetadata.new(
+        producer_name: "fake-producer",
+        sequence_id: 1,
+        publish_time: 123
+      )
+      socket.write(Pulsar::Internal::FrameCodec.encode_message(message_command, metadata, "hello"))
+      socket.read
+    end
+    connection = described_class.connect(
+      host: "127.0.0.1",
+      port: port,
+      connection_timeout: 1,
+      operation_timeout: 1,
+      client_version: "pulsar-ruby-test"
+    )
+
+    connection.register_consumer(3, consumer)
+    connection.write_command(Pulsar::Internal::CommandFactory.flow(consumer_id: 3, permits: 1))
+
+    Timeout.timeout(1) do
+      sleep 0.001 until consumer.handled
+    end
+
+    expect(consumer.received_command.consumer_id).to eq(3)
+    expect(consumer.received_payload).to eq("hello")
+
+    connection.close
+    server_thread.join
+  end
 end

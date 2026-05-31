@@ -22,8 +22,12 @@ module Pulsar
         @client_version = client_version
         @connected = false
         @closed = false
-        @mutex = Mutex.new
+        @state_mutex = Mutex.new
+        @write_mutex = Mutex.new
         @request_id = 0
+        @pending_requests = {}
+        @pending_sends = {}
+        @consumers = {}
       end
 
       def connect
@@ -37,6 +41,7 @@ module Pulsar
         @protocol_version = command.connected.protocol_version
         @max_message_size = command.connected.max_message_size
         @connected = true
+        start_reader_thread
         self
       rescue Error
         close
@@ -53,6 +58,8 @@ module Pulsar
         @closed = true
         @connected = false
         @transport.close
+        reject_pending(ClosedError.new("connection is closed"))
+        @reader_thread&.join unless Thread.current == @reader_thread
         nil
       end
 
@@ -61,43 +68,59 @@ module Pulsar
       end
 
       def next_request_id
-        @mutex.synchronize do
+        @state_mutex.synchronize do
           @request_id += 1
         end
       end
 
       def request(command, timeout: @operation_timeout)
         ensure_connected!
+        promise = Promise.new
+        request_id = request_id_for(command)
+        add_pending_request(request_id, promise)
 
-        @mutex.synchronize do
-          @transport.write(FrameCodec.encode_command(command))
-          read_command(timeout: timeout)
+        begin
+          write_frame(FrameCodec.encode_command(command))
+          promise.wait(timeout: timeout)
+        ensure
+          remove_pending_request(request_id)
         end
       end
 
       def send_message(command, metadata, payload, timeout: @operation_timeout)
         ensure_connected!
+        promise = Promise.new
+        send_key = [command["send"].producer_id, command["send"].sequence_id]
+        add_pending_send(send_key, promise)
 
-        @mutex.synchronize do
-          @transport.write(FrameCodec.encode_message(command, metadata, payload))
-          read_command(timeout: timeout)
+        begin
+          write_frame(FrameCodec.encode_message(command, metadata, payload))
+          promise.wait(timeout: timeout)
+        ensure
+          remove_pending_send(send_key)
         end
       end
 
       def write_command(command)
         ensure_connected!
 
-        @mutex.synchronize do
-          @transport.write(FrameCodec.encode_command(command))
-        end
+        write_frame(FrameCodec.encode_command(command))
+      end
+
+      def register_consumer(consumer_id, consumer)
+        @state_mutex.synchronize { @consumers[consumer_id] = consumer }
+        nil
+      end
+
+      def unregister_consumer(consumer_id)
+        @state_mutex.synchronize { @consumers.delete(consumer_id) }
+        nil
       end
 
       def read_frame(timeout: @operation_timeout)
         ensure_connected!
 
-        @mutex.synchronize do
-          read_decoded_frame(timeout: timeout)
-        end
+        read_decoded_frame(timeout: timeout)
       end
 
       private
@@ -110,7 +133,7 @@ module Pulsar
             protocol_version: PROTOCOL_VERSION
           )
         )
-        @transport.write(FrameCodec.encode_command(command))
+        write_frame(FrameCodec.encode_command(command))
       end
 
       def read_command(timeout:)
@@ -127,6 +150,114 @@ module Pulsar
       def ensure_connected!
         raise ClosedError, "connection is closed" if closed?
         raise ConnectionError, "connection is not connected" unless connected?
+      end
+
+      def write_frame(frame)
+        @write_mutex.synchronize { @transport.write(frame) }
+      end
+
+      def start_reader_thread
+        @reader_thread = Thread.new { reader_loop }
+      end
+
+      def reader_loop
+        loop do
+          break if closed?
+
+          route_frame(read_decoded_frame(timeout: @operation_timeout))
+        end
+      rescue ClosedError, ConnectionError
+        reject_pending(ClosedError.new("connection is closed")) unless closed?
+      rescue Error => e
+        reject_pending(e)
+      end
+
+      def route_frame(decoded)
+        command = decoded.command
+
+        case command.type
+        when :MESSAGE
+          consumer_for(command.message.consumer_id)&.handle_message(command.message, decoded.headers_and_payload)
+        when :SEND_RECEIPT
+          fulfill_pending_send(command.send_receipt.producer_id, command.send_receipt.sequence_id, command)
+        when :ERROR
+          reject_pending_request(command.error.request_id, BrokerError.new(command.error.message))
+        else
+          fulfill_pending_request(response_request_id(command), command)
+        end
+      end
+
+      def add_pending_request(request_id, promise)
+        @state_mutex.synchronize { @pending_requests[request_id] = promise }
+      end
+
+      def remove_pending_request(request_id)
+        @state_mutex.synchronize { @pending_requests.delete(request_id) }
+      end
+
+      def fulfill_pending_request(request_id, command)
+        promise = @state_mutex.synchronize { @pending_requests.delete(request_id) }
+        promise&.fulfill(command)
+      end
+
+      def reject_pending_request(request_id, error)
+        promise = @state_mutex.synchronize { @pending_requests.delete(request_id) }
+        promise&.reject(error)
+      end
+
+      def add_pending_send(send_key, promise)
+        @state_mutex.synchronize { @pending_sends[send_key] = promise }
+      end
+
+      def remove_pending_send(send_key)
+        @state_mutex.synchronize { @pending_sends.delete(send_key) }
+      end
+
+      def fulfill_pending_send(producer_id, sequence_id, command)
+        promise = @state_mutex.synchronize { @pending_sends.delete([producer_id, sequence_id]) }
+        promise&.fulfill(command)
+      end
+
+      def consumer_for(consumer_id)
+        @state_mutex.synchronize { @consumers[consumer_id] }
+      end
+
+      def reject_pending(error)
+        requests, sends = @state_mutex.synchronize do
+          [@pending_requests.values.tap { @pending_requests.clear },
+           @pending_sends.values.tap { @pending_sends.clear }]
+        end
+        (requests + sends).each { |promise| promise.reject(error) }
+      end
+
+      def request_id_for(command)
+        case command.type
+        when :PRODUCER
+          command.producer.request_id
+        when :SUBSCRIBE
+          command.subscribe.request_id
+        when :LOOKUP
+          command.lookupTopic.request_id
+        when :CLOSE_PRODUCER
+          command.close_producer.request_id
+        when :CLOSE_CONSUMER
+          command.close_consumer.request_id
+        else
+          raise ProtocolError, "command #{command.type} does not have a request id"
+        end
+      end
+
+      def response_request_id(command)
+        case command.type
+        when :PRODUCER_SUCCESS
+          command.producer_success.request_id
+        when :SUCCESS
+          command.success.request_id
+        when :LOOKUP_RESPONSE
+          command.lookupTopicResponse.request_id
+        else
+          raise ProtocolError, "unexpected broker command #{command.type}"
+        end
       end
     end
   end

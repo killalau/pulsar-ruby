@@ -8,8 +8,9 @@ local or self-hosted broker, with room to grow into TLS, authentication, batchin
 other features over time.
 
 **Status:** Early development. The public API, protocol definitions, frame codec,
-plaintext TCP transport, and initial producer/consumer protocol paths are in place.
-Real broker integration is being brought up against Pulsar standalone.
+plaintext TCP transport, connection reader, and initial producer/consumer protocol
+paths are in place. Real broker integration is being brought up against Pulsar
+standalone.
 
 ## Requirements
 
@@ -57,9 +58,9 @@ Pulsar::Client.open("pulsar://localhost:6650") do |client|
 end
 ```
 
-Today, `producer.send`, `consumer.receive`, and `consumer.ack` raise
-`Pulsar::UnsupportedFeatureError` until the protocol stack is wired up. Client lifecycle,
-`Message`, `MessageId`, and close semantics are usable.
+Today, `producer.send`, `consumer.receive`, and `consumer.ack` are wired to the
+plaintext protocol path for non-partitioned topics. TLS, authentication, batching,
+compression, partitioned topics, and schemas beyond raw payloads are still deferred.
 
 ## Development
 

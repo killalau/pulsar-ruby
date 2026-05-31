@@ -30,6 +30,14 @@ RSpec.describe Pulsar::Internal::ConsumerImpl do
     def write_command(command)
       @writes << command
     end
+
+    def register_consumer(_consumer_id, _consumer)
+      nil
+    end
+
+    def unregister_consumer(_consumer_id)
+      nil
+    end
   end
 
   it "subscribes, receives a message, sends flow, and acks" do

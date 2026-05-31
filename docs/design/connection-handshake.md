@@ -15,7 +15,11 @@ Ruby Apache Pulsar client.
   - protocol version
   - max message size
 - Allocating increasing request IDs.
-- Sending one command and reading one response synchronously.
+- Sending request commands and resolving responses through a pending request
+  map.
+- Sending message frames and routing send receipts back to the waiting send.
+- Running a background reader thread after the connect handshake.
+- Registering consumers and routing broker-pushed messages by consumer ID.
 - Closing idempotently.
 
 ## Internal API
@@ -31,24 +35,21 @@ connection = Pulsar::Internal::Connection.connect(
 
 request_id = connection.next_request_id
 response = connection.request(command, timeout: 30)
+connection.register_consumer(consumer_id, consumer)
 connection.close
 ```
 
 ## Current Shape
 
-The current request/response path is intentionally simple and synchronized. It
-is enough to support the next small steps, such as command factory tests and
-producer creation against a fake broker.
+The connection still performs the initial `CommandConnect` handshake
+synchronously, then starts a background reader thread. Public request methods
+write frames under a write mutex and wait on internal promises that the reader
+fulfills when matching broker responses arrive.
 
-The final MVP connection still needs:
+The remaining MVP connection work is:
 
-- A background reader thread.
-- Pending request map keyed by request ID.
-- Producer send receipt routing.
-- Consumer message routing.
 - Ping/pong handling.
 - Broker error mapping.
 - Connection loss behavior.
 
-These should be added with focused red-green tests before public producer and
-consumer methods are wired to real broker behavior.
+These should be added with focused red-green tests before reconnect work.
