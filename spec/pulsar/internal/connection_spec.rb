@@ -161,6 +161,52 @@ RSpec.describe Pulsar::Internal::Connection do
     server_thread.join
   end
 
+  it "maps command error responses to typed errors" do
+    port, server_thread = with_fake_broker do |socket|
+      read_frame(socket)
+      connected = Pulsar::Proto::BaseCommand.new(
+        type: :CONNECTED,
+        connected: Pulsar::Proto::CommandConnected.new(server_version: "fake-broker", protocol_version: 21)
+      )
+      socket.write(Pulsar::Internal::FrameCodec.encode_command(connected))
+
+      request = Pulsar::Internal::FrameCodec.decode_frame(read_frame(socket)).command
+      expect(request.type).to eq(:PRODUCER)
+
+      error = Pulsar::Proto::BaseCommand.new(
+        type: :ERROR,
+        error: Pulsar::Proto::CommandError.new(
+          request_id: request.producer.request_id,
+          error: :ProducerBusy,
+          message: "producer already exists"
+        )
+      )
+      socket.write(Pulsar::Internal::FrameCodec.encode_command(error))
+      socket.read
+    end
+    connection = described_class.connect(
+      host: "127.0.0.1",
+      port: port,
+      connection_timeout: 1,
+      operation_timeout: 1,
+      client_version: "pulsar-ruby-test"
+    )
+    command = Pulsar::Proto::BaseCommand.new(
+      type: :PRODUCER,
+      producer: Pulsar::Proto::CommandProducer.new(
+        topic: "persistent://public/default/test",
+        producer_id: 1,
+        request_id: 7
+      )
+    )
+
+    expect { connection.request(command, timeout: 1) }
+      .to raise_error(Pulsar::ProducerBusyError, "producer already exists")
+
+    connection.close
+    server_thread.join
+  end
+
   it "sends message frames and returns the broker response" do
     port, server_thread = with_fake_broker do |socket|
       read_frame(socket)
@@ -203,6 +249,50 @@ RSpec.describe Pulsar::Internal::Connection do
     response = connection.send_message(command, metadata, "hello", timeout: 1)
 
     expect(response.type).to eq(:SEND_RECEIPT)
+
+    connection.close
+    server_thread.join
+  end
+
+  it "maps send error responses to typed errors" do
+    port, server_thread = with_fake_broker do |socket|
+      read_frame(socket)
+      connected = Pulsar::Proto::BaseCommand.new(
+        type: :CONNECTED,
+        connected: Pulsar::Proto::CommandConnected.new(server_version: "fake-broker", protocol_version: 21)
+      )
+      socket.write(Pulsar::Internal::FrameCodec.encode_command(connected))
+
+      decoded = Pulsar::Internal::FrameCodec.decode_frame(read_frame(socket))
+      send_command = decoded.command["send"]
+      error = Pulsar::Proto::BaseCommand.new(
+        type: :SEND_ERROR,
+        send_error: Pulsar::Proto::CommandSendError.new(
+          producer_id: send_command.producer_id,
+          sequence_id: send_command.sequence_id,
+          error: :AuthorizationError,
+          message: "not allowed"
+        )
+      )
+      socket.write(Pulsar::Internal::FrameCodec.encode_command(error))
+      socket.read
+    end
+    connection = described_class.connect(
+      host: "127.0.0.1",
+      port: port,
+      connection_timeout: 1,
+      operation_timeout: 1,
+      client_version: "pulsar-ruby-test"
+    )
+    command, metadata = Pulsar::Internal::CommandFactory.send_message(
+      producer_id: 1,
+      sequence_id: 0,
+      producer_name: "ruby-producer",
+      publish_time: 1
+    )
+
+    expect { connection.send_message(command, metadata, "hello", timeout: 1) }
+      .to raise_error(Pulsar::AuthorizationError, "not allowed")
 
     connection.close
     server_thread.join

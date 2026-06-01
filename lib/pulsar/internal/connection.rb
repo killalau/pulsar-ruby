@@ -180,8 +180,14 @@ module Pulsar
           consumer_for(command.message.consumer_id)&.handle_message(command.message, decoded.headers_and_payload)
         when :SEND_RECEIPT
           fulfill_pending_send(command.send_receipt.producer_id, command.send_receipt.sequence_id, command)
+        when :SEND_ERROR
+          reject_pending_send(
+            command.send_error.producer_id,
+            command.send_error.sequence_id,
+            BrokerErrorMapper.from(command.send_error.error, command.send_error.message)
+          )
         when :ERROR
-          reject_pending_request(command.error.request_id, BrokerError.new(command.error.message))
+          reject_pending_request(command.error.request_id, BrokerErrorMapper.from(command.error.error, command.error.message))
         else
           fulfill_pending_request(response_request_id(command), command)
         end
@@ -216,6 +222,11 @@ module Pulsar
       def fulfill_pending_send(producer_id, sequence_id, command)
         promise = @state_mutex.synchronize { @pending_sends.delete([producer_id, sequence_id]) }
         promise&.fulfill(command)
+      end
+
+      def reject_pending_send(producer_id, sequence_id, error)
+        promise = @state_mutex.synchronize { @pending_sends.delete([producer_id, sequence_id]) }
+        promise&.reject(error)
       end
 
       def consumer_for(consumer_id)
