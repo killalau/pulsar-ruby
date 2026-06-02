@@ -7,9 +7,9 @@ extensions). The goal is a small, idiomatic API for producing and consuming mess
 local or self-hosted broker, with room to grow into TLS, authentication, batching, and
 other features over time.
 
-**Status:** Early development. The public API, protocol definitions, frame codec,
-plaintext TCP transport, connection reader, and initial producer/consumer protocol
-paths are in place. The producer/consumer happy path and current supported
+**Status:** MVP implementation. The public API, protocol definitions, frame
+codec, plaintext TCP transport, connection reader, producer/consumer protocol
+paths, close cleanup, and conservative reconnect are in place. Supported
 integration scenarios are verified against Pulsar standalone.
 
 ## Requirements
@@ -33,9 +33,15 @@ cd pulsar-ruby
 bundle install
 ```
 
-## Planned usage
+## Quickstart
 
-The target API for the MVP looks like this:
+Start a local standalone broker:
+
+```bash
+docker compose up -d pulsar
+```
+
+Produce, receive, and acknowledge one message:
 
 ```ruby
 require "pulsar"
@@ -59,9 +65,58 @@ Pulsar::Client.open("pulsar://localhost:6650") do |client|
 end
 ```
 
-Today, `producer.send`, `consumer.receive`, and `consumer.ack` are wired to the
-plaintext protocol path for non-partitioned topics. TLS, authentication, batching,
-compression, partitioned topics, and schemas beyond raw payloads are still deferred.
+`producer.send`, `consumer.receive`, and `consumer.ack` are wired to the
+plaintext Pulsar binary protocol path for non-partitioned topics.
+
+## Supported MVP features
+
+- Plaintext `pulsar://` broker connections.
+- Binary protocol connect handshake.
+- Topic lookup before producer or consumer creation.
+- Non-partitioned topic producers.
+- Non-partitioned topic consumers with one subscription.
+- Single, unbatched string or byte payload messages.
+- Message properties, key, event time, and structured message IDs.
+- Individual acknowledgement.
+- Consumer flow permits.
+- Producer pending-send limits.
+- Operation and receive timeouts.
+- Idempotent producer, consumer, and client close.
+- Conservative reconnect after a dropped connection.
+
+## Deferred features
+
+- TLS.
+- Authentication.
+- Partitioned topics.
+- Reader API.
+- Multi-topic consumers.
+- Subscription type options beyond the current default broker behavior.
+- Batching.
+- Compression.
+- Chunking.
+- Schemas beyond raw byte/string payloads.
+- Negative ack and delayed reconsume.
+- Dead letter and retry topics.
+- Transactions.
+- Interceptors.
+- Admin API.
+- Metrics and tracing.
+
+## Timeouts and reconnect
+
+`Pulsar::Client.new` accepts `operation_timeout:` and `connection_timeout:`.
+`producer.send` and `consumer.receive` also accept `timeout:` for the current
+operation.
+
+Reconnect is intentionally conservative. If the socket drops, in-flight
+operations fail with `Pulsar::ConnectionError`. Existing producer and consumer
+objects remain usable; the next operation lazily opens a replacement connection
+and recreates broker-side producer or consumer state. The failed in-flight
+operation is not silently retried.
+
+See [docs/design/reconnect-policy.md](docs/design/reconnect-policy.md) for the
+design rationale.
 
 ## Development
 
@@ -75,6 +130,12 @@ Run the local Pulsar standalone integration spec:
 ```bash
 docker compose up -d pulsar
 bundle exec rake spec:integration
+```
+
+Build the local gem package:
+
+```bash
+gem build pulsar-ruby.gemspec
 ```
 
 ### Project layout

@@ -10,3 +10,6 @@ Apache Pulsar client.
 - [Integration Test Backlog](integration-test-backlog.md): Standalone
   integration scenarios that are active now or deferred until supporting
   features exist.
+- [MVP Release Readiness](mvp-release-readiness.md): Current readiness status,
+  completed MVP capabilities, release decisions, and remaining polish before a
+  first published gem.

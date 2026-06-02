@@ -1,7 +1,8 @@
 # Implementation Roadmap
 
-This roadmap turns the current research and design notes into ordered build
-steps for the pure Ruby Apache Pulsar client MVP.
+This roadmap records the ordered build steps for the pure Ruby Apache Pulsar
+client MVP. The implementation milestones are now complete for the first MVP
+target; the remaining work is release-readiness polish.
 
 ## Roadmap Principles
 
@@ -12,6 +13,8 @@ steps for the pure Ruby Apache Pulsar client MVP.
 - Keep documentation updated as decisions change during implementation.
 
 ## Milestone 1: Gem Scaffold
+
+Status: complete.
 
 Goal: create the project shape without implementing broker behavior yet.
 
@@ -38,6 +41,8 @@ Exit criteria:
 
 ## Milestone 2: Public API Shell
 
+Status: complete.
+
 Goal: seal the first public API behavior before protocol code arrives.
 
 Tasks:
@@ -58,6 +63,8 @@ Exit criteria:
 - Errors are typed.
 
 ## Milestone 3: Internal Runtime
+
+Status: complete.
 
 Goal: build the thread-based primitives before socket work.
 
@@ -83,6 +90,8 @@ Exit criteria:
 
 ## Milestone 4: Protocol Definitions
 
+Status: complete.
+
 Goal: bring in Pulsar protobuf definitions and make command objects available.
 
 Tasks:
@@ -101,6 +110,8 @@ Exit criteria:
 - Documentation names the upstream source and generation workflow.
 
 ## Milestone 5: Frame Codec
+
+Status: complete.
 
 Goal: encode and decode Pulsar binary protocol frames.
 
@@ -121,6 +132,8 @@ Exit criteria:
 
 ## Milestone 6: TCP Transport
 
+Status: complete.
+
 Goal: implement plaintext broker I/O behind an internal abstraction.
 
 Tasks:
@@ -138,6 +151,8 @@ Exit criteria:
 - TLS/auth remain explicitly unsupported.
 
 ## Milestone 7: Connection Handshake
+
+Status: complete.
 
 Goal: connect to a broker and complete the Pulsar command handshake.
 
@@ -160,6 +175,8 @@ Exit criteria:
 
 ## Milestone 8: Producer MVP
 
+Status: complete.
+
 Goal: send one unbatched message and receive a broker receipt.
 
 Tasks:
@@ -180,6 +197,8 @@ Exit criteria:
 - Send timeout and close behavior are tested.
 
 ## Milestone 9: Consumer MVP
+
+Status: complete.
 
 Goal: subscribe, receive, and ack messages.
 
@@ -203,6 +222,8 @@ Exit criteria:
 
 ## Milestone 10: Close And Cleanup Semantics
 
+Status: complete.
+
 Goal: make lifecycle behavior reliable.
 
 Tasks:
@@ -220,6 +241,8 @@ Exit criteria:
 
 ## Milestone 11: Basic Reconnect Policy
 
+Status: complete.
+
 Goal: define minimal resilience without overbuilding.
 
 Tasks:
@@ -236,6 +259,8 @@ Exit criteria:
 - Behavior is documented and predictable.
 
 ## Milestone 12: MVP Documentation
+
+Status: complete.
 
 Goal: make the first implementation usable.
 
@@ -291,11 +316,10 @@ Some work can happen in parallel after the scaffold:
 - Frame codec can be tested before real socket connections exist.
 - Public value objects can be completed before protocol integration.
 
-## Current Open Decisions
+## Release Open Decisions
 
-- Exact Ruby version support.
-- Whether generated protobuf files are committed or generated during release.
-- Whether `receive(timeout: nil)` inherits operation timeout or blocks forever.
-- Exact reconnect retry policy.
-- Whether the first integration harness uses Docker Compose only or also a mock
-  protocol server.
+- Gem publishing name and first public version.
+- Whether the first published artifact should be `0.1.0` or a pre-release.
+- Whether to add a clean-install smoke test before publishing.
+- When to introduce slow/disruptive integration groups such as broker restart
+  recovery.
