@@ -13,5 +13,5 @@ Apache Pulsar client.
 - [MVP Release Readiness](mvp-release-readiness.md): Current readiness status,
   completed MVP capabilities, release decisions, and remaining polish before a
   first published gem.
-- [Release Checklist](release-checklist.md): Step-by-step verification,
-  publishing, and post-release checklist for MVP and future releases.
+- [Release Runbook](release-checklist.md): Step-by-step version bump,
+  verification, publishing, and post-release process for gem releases.

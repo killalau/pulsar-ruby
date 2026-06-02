@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## 0.1.0.pre - Unreleased
+## 0.1.0.pre - 2026-06-02
 
 Initial MVP prerelease for the pure Ruby Apache Pulsar client.
 
@@ -47,9 +47,9 @@ Initial MVP prerelease for the pure Ruby Apache Pulsar client.
 - Metrics and tracing.
 - Full retry policy for failed in-flight sends.
 
-### Verification
+### Verified
 
-Before publishing this release, run:
+This release was verified with:
 
 ```bash
 bundle exec rake verify
