@@ -140,6 +140,16 @@ Build the local gem package:
 gem build pulsar-ruby.gemspec
 ```
 
+Run the installed-gem smoke test against local Pulsar standalone:
+
+```bash
+docker compose up -d pulsar
+bundle exec rake smoke:local
+```
+
+`smoke:local` builds the gem, installs that built artifact into a temporary gem
+home, requires `pulsar`, and performs one produce/consume/ack round trip.
+
 ### Git hooks
 
 This repository includes a versioned pre-push hook in `.githooks/pre-push`.
@@ -160,6 +170,7 @@ broker and are slower than the regular push guard.
 | `lib/pulsar/` | Public API (`Client`, `Producer`, `Consumer`, `Message`, …) |
 | `lib/pulsar/internal/` | Thread runtime, promises, bounded queues (not public API) |
 | `docs/` | Research, design, and implementation planning |
+| `script/` | Local release and smoke-test scripts |
 | `spec/` | RSpec tests |
 
 See [docs/overview.md](docs/overview.md) for the documentation index.

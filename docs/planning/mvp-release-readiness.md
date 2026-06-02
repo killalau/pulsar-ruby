@@ -30,6 +30,7 @@ The current verification baseline is:
 
 - `bundle exec rake`
 - `bundle exec rake spec:integration`
+- `bundle exec rake smoke:local`
 - `gem build pulsar-ruby.gemspec`
 
 The integration task expects a local Pulsar standalone broker from Docker
@@ -38,7 +39,11 @@ Compose:
 ```bash
 docker compose up -d pulsar
 bundle exec rake spec:integration
+bundle exec rake smoke:local
 ```
+
+The smoke task builds the gem, installs the built artifact into a temporary gem
+home, and runs one produce/consume/ack round trip through `require 'pulsar'`.
 
 ## Release Decisions
 
@@ -63,8 +68,7 @@ Before publishing to RubyGems, do a final release pass:
   pre-release.
 - Add release notes or a changelog entry.
 - Run the verification baseline on a clean checkout.
-- Consider a smoke test that installs the built gem into a temporary app and
-  produces/consumes one message.
+- Run the installed-gem smoke test from the built artifact.
 
 ## Deferred Product Work
 

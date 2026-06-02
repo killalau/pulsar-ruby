@@ -23,6 +23,13 @@ namespace :proto do
   end
 end
 
+namespace :smoke do
+  desc 'Build the gem and run a local installed-gem smoke test against Pulsar standalone'
+  task :local do
+    sh 'ruby', 'script/smoke/local_installed_gem.rb'
+  end
+end
+
 desc 'Run lint and test checks used by the pre-push hook'
 task verify: %i[rubocop spec]
 
