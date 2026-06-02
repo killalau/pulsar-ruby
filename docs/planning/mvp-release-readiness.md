@@ -66,9 +66,11 @@ Before publishing to RubyGems, do a final release pass:
 - Confirm gem name availability and ownership.
 - Decide whether version `0.1.0` is the first public version or whether to cut a
   pre-release.
-- Add release notes or a changelog entry.
+- Confirm the release notes in `CHANGELOG.md`.
 - Run the verification baseline on a clean checkout.
 - Run the installed-gem smoke test from the built artifact.
+
+Use [Release Checklist](release-checklist.md) for the concrete release sequence.
 
 ## Deferred Product Work
 
