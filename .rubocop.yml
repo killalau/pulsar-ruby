@@ -36,8 +36,5 @@ Metrics/ParameterLists:
 RSpec/ExampleLength:
   Max: 80
 
-RSpec/InstanceVariable:
-  Enabled: false
-
 RSpec/MultipleExpectations:
   Max: 12
