@@ -12,7 +12,7 @@ module Pulsar
 
     def send(payload, properties: {}, key: nil, event_time: nil, timeout: nil)
       ensure_open!
-      raise UnsupportedFeatureError, "producer send is not implemented yet" unless @impl
+      raise UnsupportedFeatureError, 'producer send is not implemented yet' unless @impl
 
       @impl.send(payload, properties: properties, key: key, event_time: event_time, timeout: timeout)
     end
@@ -32,7 +32,7 @@ module Pulsar
     private
 
     def ensure_open!
-      raise ClosedError, "producer is closed" if closed?
+      raise ClosedError, 'producer is closed' if closed?
     end
   end
 end

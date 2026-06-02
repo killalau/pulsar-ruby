@@ -15,7 +15,7 @@ module Pulsar
       end
 
       def queue(capacity:)
-        raise ClosedError, "runtime is shut down" if shutdown?
+        raise ClosedError, 'runtime is shut down' if shutdown?
 
         BoundedQueue.new(capacity: capacity).tap do |queue|
           @mutex.synchronize { @queues << queue }
@@ -23,7 +23,7 @@ module Pulsar
       end
 
       def spawn(&block)
-        raise ClosedError, "runtime is shut down" if shutdown?
+        raise ClosedError, 'runtime is shut down' if shutdown?
 
         thread = Thread.new(&block)
         @mutex.synchronize { @threads << thread }

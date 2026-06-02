@@ -5,7 +5,7 @@ module Pulsar
     attr_reader :payload, :message_id, :properties, :key, :topic, :publish_time, :event_time
 
     def initialize(payload:, message_id:, properties: {}, key: nil, topic: nil, publish_time: nil, event_time: nil)
-      raise ArgumentError, "message_id must be a Pulsar::MessageId" unless message_id.is_a?(MessageId)
+      raise ArgumentError, 'message_id must be a Pulsar::MessageId' unless message_id.is_a?(MessageId)
 
       @payload = String(payload).b.freeze
       @message_id = message_id

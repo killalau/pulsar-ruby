@@ -13,14 +13,14 @@ module Pulsar
 
     def receive(timeout: nil)
       ensure_open!
-      raise UnsupportedFeatureError, "consumer receive is not implemented yet" unless @impl
+      raise UnsupportedFeatureError, 'consumer receive is not implemented yet' unless @impl
 
       @impl.receive(timeout: timeout)
     end
 
     def ack(message_or_message_id)
       ensure_open!
-      raise UnsupportedFeatureError, "consumer ack is not implemented yet" unless @impl
+      raise UnsupportedFeatureError, 'consumer ack is not implemented yet' unless @impl
 
       @impl.ack(message_or_message_id)
     end
@@ -40,7 +40,7 @@ module Pulsar
     private
 
     def ensure_open!
-      raise ClosedError, "consumer is closed" if closed?
+      raise ClosedError, 'consumer is closed' if closed?
     end
   end
 end

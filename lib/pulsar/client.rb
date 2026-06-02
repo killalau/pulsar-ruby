@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "set"
-require "uri"
+require 'set'
+require 'uri'
 
 module Pulsar
   class Client
@@ -112,13 +112,13 @@ module Pulsar
     end
 
     def ensure_open!
-      raise ClosedError, "client is closed" if closed?
+      raise ClosedError, 'client is closed' if closed?
     end
 
     def normalize_service_url(service_url)
       uri = URI(String(service_url))
-      raise ConfigurationError, "service URL must use pulsar:// scheme" unless uri.scheme == "pulsar"
-      raise ConfigurationError, "service URL must include a host" if uri.host.nil? || uri.host.empty?
+      raise ConfigurationError, 'service URL must use pulsar:// scheme' unless uri.scheme == 'pulsar'
+      raise ConfigurationError, 'service URL must include a host' if uri.host.nil? || uri.host.empty?
 
       uri.to_s
     rescue URI::InvalidURIError => e

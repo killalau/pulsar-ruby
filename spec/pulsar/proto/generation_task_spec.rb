@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
-RSpec.describe "protobuf generation task" do
-  it "defines proto:generate" do
-    load File.expand_path("../../../Rakefile", __dir__)
+RSpec.describe 'protobuf generation task' do
+  it 'defines proto:generate' do
+    load File.expand_path('../../../Rakefile', __dir__)
 
-    expect(Rake::Task.task_defined?("proto:generate")).to be(true)
+    expect(Rake::Task.task_defined?('proto:generate')).to be(true)
   end
 
-  it "defines spec:integration" do
-    load File.expand_path("../../../Rakefile", __dir__)
+  it 'defines spec:integration' do
+    load File.expand_path('../../../Rakefile', __dir__)
 
-    expect(Rake::Task.task_defined?("spec:integration")).to be(true)
+    expect(Rake::Task.task_defined?('spec:integration')).to be(true)
   end
 end

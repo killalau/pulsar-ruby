@@ -22,7 +22,7 @@ module Pulsar
       def wait(timeout:)
         @mutex.synchronize do
           @condition.wait(@mutex, timeout) unless @completed
-          raise TimeoutError, "operation timed out" unless @completed
+          raise TimeoutError, 'operation timed out' unless @completed
           raise @error if @error
 
           @value

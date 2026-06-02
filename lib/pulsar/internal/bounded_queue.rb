@@ -4,7 +4,7 @@ module Pulsar
   module Internal
     class BoundedQueue
       def initialize(capacity:)
-        raise ArgumentError, "capacity must be positive" unless capacity.positive?
+        raise ArgumentError, 'capacity must be positive' unless capacity.positive?
 
         @queue = SizedQueue.new(capacity)
         @mutex = Mutex.new
@@ -33,7 +33,7 @@ module Pulsar
           return @queue.pop(true)
         rescue ThreadError
           remaining = deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC)
-          raise TimeoutError, "operation timed out" if remaining <= 0
+          raise TimeoutError, 'operation timed out' if remaining <= 0
 
           sleep([remaining, 0.001].min)
         end
@@ -54,7 +54,7 @@ module Pulsar
           return @queue.push(value, true)
         rescue ThreadError
           remaining = deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC)
-          raise TimeoutError, "operation timed out" if remaining <= 0
+          raise TimeoutError, 'operation timed out' if remaining <= 0
 
           sleep([remaining, 0.001].min)
         end
@@ -70,7 +70,7 @@ module Pulsar
       end
 
       def ensure_open!
-        raise ClosedError, "queue is closed" if @mutex.synchronize { @closed }
+        raise ClosedError, 'queue is closed' if @mutex.synchronize { @closed }
       end
     end
   end

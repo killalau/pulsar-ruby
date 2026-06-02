@@ -46,21 +46,21 @@ RSpec.describe Pulsar::Internal::ConsumerImpl do
     end
   end
 
-  it "subscribes, receives a message, sends flow, and acks" do
+  it 'subscribes, receives a message, sends flow, and acks' do
     connection = FakeConsumerConnection.new
     consumer = described_class.create(
       connection: connection,
-      topic: "persistent://public/default/test",
-      subscription: "ruby-sub",
+      topic: 'persistent://public/default/test',
+      subscription: 'ruby-sub',
       consumer_id: 9,
       operation_timeout: 5,
       receiver_queue_size: 10
     )
     metadata = Pulsar::Proto::MessageMetadata.new(
-      producer_name: "producer",
+      producer_name: 'producer',
       sequence_id: 1,
       publish_time: 123,
-      properties: [Pulsar::Proto::KeyValue.new(key: "kind", value: "created")]
+      properties: [Pulsar::Proto::KeyValue.new(key: 'kind', value: 'created')]
     )
     command = Pulsar::Proto::BaseCommand.new(
       type: :MESSAGE,
@@ -69,30 +69,30 @@ RSpec.describe Pulsar::Internal::ConsumerImpl do
         message_id: Pulsar::Proto::MessageIdData.new(ledgerId: 10, entryId: 20, partition: -1, batch_index: -1)
       )
     )
-    frame = Pulsar::Internal::FrameCodec.encode_message(command, metadata, "hello")
+    frame = Pulsar::Internal::FrameCodec.encode_message(command, metadata, 'hello')
     decoded = Pulsar::Internal::FrameCodec.decode_frame(frame)
 
     consumer.handle_message(decoded.command.message, decoded.headers_and_payload)
     message = consumer.receive(timeout: 1)
     consumer.ack(message)
 
-    expect(consumer.topic).to eq("persistent://public/default/test")
-    expect(consumer.subscription).to eq("ruby-sub")
-    expect(message.payload).to eq("hello")
+    expect(consumer.topic).to eq('persistent://public/default/test')
+    expect(consumer.subscription).to eq('ruby-sub')
+    expect(message.payload).to eq('hello')
     expect(message.message_id).to eq(Pulsar::MessageId.new(ledger_id: 10, entry_id: 20))
-    expect(message.properties).to eq("kind" => "created")
+    expect(message.properties).to eq('kind' => 'created')
     expect(connection.requests.first.first.type).to eq(:SUBSCRIBE)
     expect(connection.writes.map(&:type)).to include(:FLOW, :ACK)
     expect(connection.writes.select { |command| command.type == :FLOW }.map { |command| command.flow.messagePermits })
       .to eq([10, 1])
   end
 
-  it "closes broker-side consumers idempotently" do
+  it 'closes broker-side consumers idempotently' do
     connection = FakeConsumerConnection.new
     consumer = described_class.create(
       connection: connection,
-      topic: "persistent://public/default/test",
-      subscription: "ruby-sub",
+      topic: 'persistent://public/default/test',
+      subscription: 'ruby-sub',
       consumer_id: 9,
       operation_timeout: 5,
       receiver_queue_size: 10
@@ -107,12 +107,12 @@ RSpec.describe Pulsar::Internal::ConsumerImpl do
     expect(consumer).to be_closed
   end
 
-  it "rejects receive and ack after close" do
+  it 'rejects receive and ack after close' do
     connection = FakeConsumerConnection.new
     consumer = described_class.create(
       connection: connection,
-      topic: "persistent://public/default/test",
-      subscription: "ruby-sub",
+      topic: 'persistent://public/default/test',
+      subscription: 'ruby-sub',
       consumer_id: 9,
       operation_timeout: 5,
       receiver_queue_size: 10
@@ -125,12 +125,12 @@ RSpec.describe Pulsar::Internal::ConsumerImpl do
     expect { consumer.ack(message_id) }.to raise_error(Pulsar::ClosedError)
   end
 
-  it "wakes blocked receive calls when closed" do
+  it 'wakes blocked receive calls when closed' do
     connection = FakeConsumerConnection.new
     consumer = described_class.create(
       connection: connection,
-      topic: "persistent://public/default/test",
-      subscription: "ruby-sub",
+      topic: 'persistent://public/default/test',
+      subscription: 'ruby-sub',
       consumer_id: 9,
       operation_timeout: 5,
       receiver_queue_size: 10
@@ -142,21 +142,21 @@ RSpec.describe Pulsar::Internal::ConsumerImpl do
       error = e
     end
 
-    sleep 0.001 until pending.status == "sleep"
+    sleep 0.001 until pending.status == 'sleep'
     consumer.close
     pending.join
 
     expect(error).to be_a(Pulsar::ClosedError)
   end
 
-  it "reattaches to a replacement connection before acking" do
+  it 'reattaches to a replacement connection before acking' do
     first_connection = FakeConsumerConnection.new
     second_connection = FakeConsumerConnection.new
     connections = [first_connection, second_connection]
     consumer = described_class.create(
       connection_provider: -> { connections.first },
-      topic: "persistent://public/default/test",
-      subscription: "ruby-sub",
+      topic: 'persistent://public/default/test',
+      subscription: 'ruby-sub',
       consumer_id: 9,
       operation_timeout: 5,
       receiver_queue_size: 10

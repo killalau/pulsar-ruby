@@ -58,7 +58,7 @@ module Pulsar
         @closed = true
         @connected = false
         @transport.close
-        reject_pending(ClosedError.new("connection is closed"))
+        reject_pending(ClosedError.new('connection is closed'))
         @reader_thread&.join unless Thread.current == @reader_thread
         nil
       end
@@ -90,7 +90,7 @@ module Pulsar
       def send_message(command, metadata, payload, timeout: @operation_timeout)
         ensure_connected!
         promise = Promise.new
-        send_key = [command["send"].producer_id, command["send"].sequence_id]
+        send_key = [command['send'].producer_id, command['send'].sequence_id]
         add_pending_send(send_key, promise)
 
         begin
@@ -142,14 +142,14 @@ module Pulsar
 
       def read_decoded_frame(timeout:)
         size_prefix = @transport.read_exact(4, timeout: timeout)
-        size = size_prefix.unpack1("N")
+        size = size_prefix.unpack1('N')
         frame = size_prefix + @transport.read_exact(size, timeout: timeout)
         FrameCodec.decode_frame(frame)
       end
 
       def ensure_connected!
-        raise ClosedError, "connection is closed" if closed?
-        raise ConnectionError, "connection is not connected" unless connected?
+        raise ClosedError, 'connection is closed' if closed?
+        raise ConnectionError, 'connection is not connected' unless connected?
       end
 
       def write_frame(frame)
@@ -167,10 +167,10 @@ module Pulsar
           route_frame(read_decoded_frame(timeout: @operation_timeout))
         end
       rescue ClosedError
-        reject_pending(ClosedError.new("connection is closed")) unless closed?
+        reject_pending(ClosedError.new('connection is closed')) unless closed?
       rescue ConnectionError => e
         if closed?
-          reject_pending(ClosedError.new("connection is closed"))
+          reject_pending(ClosedError.new('connection is closed'))
         else
           fail_connection(ConnectionError.new("connection lost: #{e.message}"))
         end

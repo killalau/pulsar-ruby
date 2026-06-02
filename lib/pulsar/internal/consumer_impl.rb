@@ -31,7 +31,7 @@ module Pulsar
       end
 
       def handle_message(command_message, headers_and_payload)
-        raise ClosedError, "consumer is closed" if closed?
+        raise ClosedError, 'consumer is closed' if closed?
 
         decoded = FrameCodec.decode_message_data(headers_and_payload)
         @receiver_queue.push(
@@ -48,7 +48,7 @@ module Pulsar
       end
 
       def receive(timeout: nil)
-        raise ClosedError, "consumer is closed" if closed?
+        raise ClosedError, 'consumer is closed' if closed?
 
         attach unless attached?
         @receiver_queue.pop(timeout: timeout || @operation_timeout).tap do
@@ -57,7 +57,7 @@ module Pulsar
       end
 
       def ack(message_or_message_id)
-        raise ClosedError, "consumer is closed" if closed?
+        raise ClosedError, 'consumer is closed' if closed?
 
         attach unless attached?
         message_id = message_or_message_id.respond_to?(:message_id) ? message_or_message_id.message_id : message_or_message_id
@@ -87,7 +87,7 @@ module Pulsar
       end
 
       def flow(permits)
-        raise ClosedError, "consumer is closed" if closed?
+        raise ClosedError, 'consumer is closed' if closed?
 
         attach unless attached?
         @connection.write_command(CommandFactory.flow(consumer_id: consumer_id, permits: permits))

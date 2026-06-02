@@ -33,7 +33,7 @@ module Pulsar
       end
 
       def send(payload, properties: {}, key: nil, event_time: nil, timeout: nil)
-        raise ClosedError, "producer is closed" if closed?
+        raise ClosedError, 'producer is closed' if closed?
 
         send_timeout = timeout || @operation_timeout
         acquire_pending_send(timeout: send_timeout)
@@ -110,7 +110,7 @@ module Pulsar
         deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout
         @mutex.synchronize do
           loop do
-            raise ClosedError, "producer is closed" if @closed
+            raise ClosedError, 'producer is closed' if @closed
 
             if @pending_sends < @max_pending_messages
               @pending_sends += 1
@@ -118,7 +118,7 @@ module Pulsar
             end
 
             remaining = deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC)
-            raise TimeoutError, "operation timed out" if remaining <= 0
+            raise TimeoutError, 'operation timed out' if remaining <= 0
 
             @pending_condition.wait(@mutex, remaining)
           end
