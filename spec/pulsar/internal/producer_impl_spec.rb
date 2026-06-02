@@ -3,18 +3,24 @@
 RSpec.describe Pulsar::Internal::ProducerImpl do
   class FakeProducerConnection
     attr_reader :requests, :messages
+    attr_writer :connected
 
     def initialize
       @request_id = 0
       @requests = []
       @messages = []
       @send_delay = nil
+      @connected = true
     end
 
     attr_writer :send_delay
 
     def next_request_id
       @request_id += 1
+    end
+
+    def connected?
+      @connected
     end
 
     def request(command, timeout:)
@@ -56,13 +62,13 @@ RSpec.describe Pulsar::Internal::ProducerImpl do
 
   it "creates a broker-side producer and sends one unbatched message" do
     connection = FakeProducerConnection.new
-      producer = described_class.create(
-        connection: connection,
-        topic: "persistent://public/default/test",
-        producer_id: 7,
-        operation_timeout: 5,
-        max_pending_messages: 1000
-      )
+    producer = described_class.create(
+      connection: connection,
+      topic: "persistent://public/default/test",
+      producer_id: 7,
+      operation_timeout: 5,
+      max_pending_messages: 1000
+    )
 
     message_id = producer.send("hello", properties: { "kind" => "test" }, key: "k", event_time: 123, timeout: 2)
 
@@ -126,5 +132,26 @@ RSpec.describe Pulsar::Internal::ProducerImpl do
     expect { producer.send("second", timeout: 0.001) }.to raise_error(Pulsar::TimeoutError)
 
     first_send.join
+  end
+
+  it "reattaches to a replacement connection before the next send" do
+    first_connection = FakeProducerConnection.new
+    second_connection = FakeProducerConnection.new
+    connections = [first_connection, second_connection]
+    producer = described_class.create(
+      connection_provider: -> { connections.first },
+      topic: "persistent://public/default/test",
+      producer_id: 7,
+      operation_timeout: 5,
+      max_pending_messages: 1000
+    )
+    first_connection.connected = false
+    connections.shift
+
+    message_id = producer.send("after-reconnect", timeout: 5)
+
+    expect(second_connection.requests.map { |command, _timeout| command.type }).to eq([:PRODUCER])
+    expect(second_connection.messages.first[2]).to eq("after-reconnect")
+    expect(message_id).to eq(Pulsar::MessageId.new(ledger_id: 10, entry_id: 20))
   end
 end

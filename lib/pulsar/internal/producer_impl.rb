@@ -5,30 +5,24 @@ module Pulsar
     class ProducerImpl
       attr_reader :topic, :producer_id, :producer_name
 
-      def self.create(connection:, topic:, producer_id:, operation_timeout:, max_pending_messages: 1000)
-        request_id = connection.next_request_id
-        command = CommandFactory.producer(topic: topic, producer_id: producer_id, request_id: request_id)
-        response = connection.request(command, timeout: operation_timeout)
-
-        unless response.type == :PRODUCER_SUCCESS
-          raise BrokerError, "producer creation failed: #{response.type}"
-        end
-
+      def self.create(topic:, producer_id:, operation_timeout:, max_pending_messages: 1000,
+                      connection: nil, connection_provider: nil)
+        connection_provider ||= -> { connection }
         new(
-          connection: connection,
+          connection_provider: connection_provider,
           topic: topic,
           producer_id: producer_id,
-          producer_name: response.producer_success.producer_name,
           operation_timeout: operation_timeout,
           max_pending_messages: max_pending_messages
-        )
+        ).tap(&:attach)
       end
 
-      def initialize(connection:, topic:, producer_id:, producer_name:, operation_timeout:, max_pending_messages:)
-        @connection = connection
+      def initialize(connection_provider:, topic:, producer_id:, operation_timeout:, max_pending_messages:)
+        @connection_provider = connection_provider
+        @connection = nil
         @topic = topic
         @producer_id = producer_id
-        @producer_name = producer_name
+        @producer_name = nil
         @operation_timeout = operation_timeout
         @max_pending_messages = max_pending_messages
         @pending_sends = 0
@@ -44,6 +38,7 @@ module Pulsar
         acquire_pending_send(timeout: send_timeout)
 
         begin
+          attach unless attached?
           sequence_id = next_sequence_id
           command, metadata = CommandFactory.send_message(
             producer_id: producer_id,
@@ -69,10 +64,12 @@ module Pulsar
       def close
         return nil if closed?
 
-        request_id = @connection.next_request_id
-        command = CommandFactory.close_producer(producer_id: producer_id, request_id: request_id)
-        response = @connection.request(command, timeout: @operation_timeout)
-        raise BrokerError, "producer close failed: #{response.type}" unless response.type == :SUCCESS
+        if attached?
+          request_id = @connection.next_request_id
+          command = CommandFactory.close_producer(producer_id: producer_id, request_id: request_id)
+          response = @connection.request(command, timeout: @operation_timeout)
+          raise BrokerError, "producer close failed: #{response.type}" unless response.type == :SUCCESS
+        end
 
         @closed = true
         nil
@@ -83,6 +80,24 @@ module Pulsar
       end
 
       private
+
+      def attach
+        @connection = @connection_provider.call
+        request_id = @connection.next_request_id
+        command = CommandFactory.producer(topic: topic, producer_id: producer_id, request_id: request_id)
+        response = @connection.request(command, timeout: @operation_timeout)
+
+        unless response.type == :PRODUCER_SUCCESS
+          raise BrokerError, "producer creation failed: #{response.type}"
+        end
+
+        @producer_name = response.producer_success.producer_name
+        nil
+      end
+
+      def attached?
+        @connection&.connected?
+      end
 
       def next_sequence_id
         @mutex.synchronize do

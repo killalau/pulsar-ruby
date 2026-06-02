@@ -9,8 +9,8 @@ other features over time.
 
 **Status:** Early development. The public API, protocol definitions, frame codec,
 plaintext TCP transport, connection reader, and initial producer/consumer protocol
-paths are in place. The producer/consumer happy path is verified against Pulsar
-standalone.
+paths are in place. The producer/consumer happy path and current supported
+integration scenarios are verified against Pulsar standalone.
 
 ## Requirements
 

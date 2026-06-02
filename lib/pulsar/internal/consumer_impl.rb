@@ -5,35 +5,27 @@ module Pulsar
     class ConsumerImpl
       attr_reader :topic, :subscription, :consumer_id
 
-      def self.create(connection:, topic:, subscription:, consumer_id:, operation_timeout:, receiver_queue_size:)
-        request_id = connection.next_request_id
-        command = CommandFactory.subscribe(
-          topic: topic,
-          subscription: subscription,
-          consumer_id: consumer_id,
-          request_id: request_id
-        )
-        response = connection.request(command, timeout: operation_timeout)
-        raise BrokerError, "subscribe failed: #{response.type}" unless response.type == :SUCCESS
-
-        consumer = new(
-          connection: connection,
+      def self.create(topic:, subscription:, consumer_id:, operation_timeout:, receiver_queue_size:,
+                      connection: nil, connection_provider: nil)
+        connection_provider ||= -> { connection }
+        new(
+          connection_provider: connection_provider,
           topic: topic,
           subscription: subscription,
           consumer_id: consumer_id,
           operation_timeout: operation_timeout,
           receiver_queue_size: receiver_queue_size
-        )
-        connection.register_consumer(consumer_id, consumer)
-        consumer.tap { |created_consumer| created_consumer.flow(receiver_queue_size) }
+        ).tap(&:attach)
       end
 
-      def initialize(connection:, topic:, subscription:, consumer_id:, operation_timeout:, receiver_queue_size:)
-        @connection = connection
+      def initialize(connection_provider:, topic:, subscription:, consumer_id:, operation_timeout:, receiver_queue_size:)
+        @connection_provider = connection_provider
+        @connection = nil
         @topic = topic
         @subscription = subscription
         @consumer_id = consumer_id
         @operation_timeout = operation_timeout
+        @receiver_queue_size = receiver_queue_size
         @receiver_queue = BoundedQueue.new(capacity: receiver_queue_size)
         @closed = false
       end
@@ -58,6 +50,7 @@ module Pulsar
       def receive(timeout: nil)
         raise ClosedError, "consumer is closed" if closed?
 
+        attach unless attached?
         @receiver_queue.pop(timeout: timeout || @operation_timeout).tap do
           flow(1)
         end
@@ -66,6 +59,7 @@ module Pulsar
       def ack(message_or_message_id)
         raise ClosedError, "consumer is closed" if closed?
 
+        attach unless attached?
         message_id = message_or_message_id.respond_to?(:message_id) ? message_or_message_id.message_id : message_or_message_id
         @connection.write_command(CommandFactory.ack(consumer_id: consumer_id, message_id: message_id))
         nil
@@ -74,12 +68,15 @@ module Pulsar
       def close
         return nil if closed?
 
-        request_id = @connection.next_request_id
-        command = CommandFactory.close_consumer(consumer_id: consumer_id, request_id: request_id)
-        response = @connection.request(command, timeout: @operation_timeout)
-        raise BrokerError, "consumer close failed: #{response.type}" unless response.type == :SUCCESS
+        if attached?
+          request_id = @connection.next_request_id
+          command = CommandFactory.close_consumer(consumer_id: consumer_id, request_id: request_id)
+          response = @connection.request(command, timeout: @operation_timeout)
+          raise BrokerError, "consumer close failed: #{response.type}" unless response.type == :SUCCESS
 
-        @connection.unregister_consumer(consumer_id)
+          @connection.unregister_consumer(consumer_id)
+        end
+
         @receiver_queue.close
         @closed = true
         nil
@@ -92,10 +89,32 @@ module Pulsar
       def flow(permits)
         raise ClosedError, "consumer is closed" if closed?
 
+        attach unless attached?
         @connection.write_command(CommandFactory.flow(consumer_id: consumer_id, permits: permits))
       end
 
       private
+
+      def attach
+        @connection = @connection_provider.call
+        request_id = @connection.next_request_id
+        command = CommandFactory.subscribe(
+          topic: topic,
+          subscription: subscription,
+          consumer_id: consumer_id,
+          request_id: request_id
+        )
+        response = @connection.request(command, timeout: @operation_timeout)
+        raise BrokerError, "subscribe failed: #{response.type}" unless response.type == :SUCCESS
+
+        @connection.register_consumer(consumer_id, self)
+        @connection.write_command(CommandFactory.flow(consumer_id: consumer_id, permits: @receiver_queue_size))
+        nil
+      end
+
+      def attached?
+        @connection&.connected?
+      end
 
       def message_id_from(data)
         MessageId.new(

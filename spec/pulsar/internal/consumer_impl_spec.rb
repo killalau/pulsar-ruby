@@ -3,15 +3,21 @@
 RSpec.describe Pulsar::Internal::ConsumerImpl do
   class FakeConsumerConnection
     attr_reader :requests, :writes
+    attr_writer :connected
 
     def initialize
       @request_id = 0
       @requests = []
       @writes = []
+      @connected = true
     end
 
     def next_request_id
       @request_id += 1
+    end
+
+    def connected?
+      @connected
     end
 
     def request(command, timeout:)
@@ -141,5 +147,27 @@ RSpec.describe Pulsar::Internal::ConsumerImpl do
     pending.join
 
     expect(error).to be_a(Pulsar::ClosedError)
+  end
+
+  it "reattaches to a replacement connection before acking" do
+    first_connection = FakeConsumerConnection.new
+    second_connection = FakeConsumerConnection.new
+    connections = [first_connection, second_connection]
+    consumer = described_class.create(
+      connection_provider: -> { connections.first },
+      topic: "persistent://public/default/test",
+      subscription: "ruby-sub",
+      consumer_id: 9,
+      operation_timeout: 5,
+      receiver_queue_size: 10
+    )
+    first_connection.connected = false
+    connections.shift
+    message_id = Pulsar::MessageId.new(ledger_id: 1, entry_id: 2)
+
+    consumer.ack(message_id)
+
+    expect(second_connection.requests.map { |command, _timeout| command.type }).to eq([:SUBSCRIBE])
+    expect(second_connection.writes.map(&:type)).to eq([:FLOW, :ACK])
   end
 end

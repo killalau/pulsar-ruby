@@ -42,7 +42,7 @@ module Pulsar
       lookup_topic(topic)
 
       impl = Internal::ProducerImpl.create(
-        connection: connection,
+        connection_provider: -> { connection },
         topic: topic,
         producer_id: next_producer_id,
         operation_timeout: operation_timeout,
@@ -56,7 +56,7 @@ module Pulsar
       lookup_topic(topic)
 
       impl = Internal::ConsumerImpl.create(
-        connection: connection,
+        connection_provider: -> { connection },
         topic: topic,
         subscription: subscription,
         consumer_id: next_consumer_id,
@@ -88,6 +88,8 @@ module Pulsar
     end
 
     def connection
+      @connection&.close if @connection && !@connection.connected?
+      @connection = nil if @connection && !@connection.connected?
       @connection ||= Internal::Connection.connect(
         host: @service_uri.host,
         port: @service_uri.port || 6650,

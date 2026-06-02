@@ -113,4 +113,22 @@ RSpec.describe "Pulsar standalone integration" do
       expect { consumer.ack(Pulsar::MessageId.new(ledger_id: 1, entry_id: 1)) }.to raise_error(Pulsar::ClosedError)
     end
   end
+
+  it "reattaches existing producer and consumer objects after connection replacement" do
+    topic = unique_topic("reconnect")
+
+    Pulsar::Client.open("pulsar://127.0.0.1:6650", operation_timeout: 5, connection_timeout: 5) do |client|
+      producer = client.producer(topic: topic)
+      consumer = client.consumer(topic: topic, subscription: "ruby-sub")
+
+      client.instance_variable_get(:@connection).close
+
+      message_id = producer.send("after-reconnect", timeout: 5)
+      message = consumer.receive(timeout: 5)
+      consumer.ack(message)
+
+      expect(message.payload).to eq("after-reconnect")
+      expect(message.message_id).to eq(message_id)
+    end
+  end
 end

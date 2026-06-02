@@ -5,8 +5,10 @@ Pulsar client.
 
 ## Current Status
 
-Initial MVP scope is based on the Java, C++, Go, and DotPulsar client baselines
-and should be refined after comparing more official clients.
+The MVP implementation supports the core non-partitioned producer/consumer path,
+standalone integration testing, bounded queues, typed errors, lifecycle cleanup,
+and conservative reconnect. Remaining work after MVP should focus on richer
+retry semantics and deferred Pulsar features.
 
 ## Proposed MVP
 

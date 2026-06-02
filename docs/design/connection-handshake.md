@@ -53,5 +53,4 @@ fulfills when matching broker responses arrive.
 Broker error mapping is centralized in `Pulsar::Internal::BrokerErrorMapper` so
 future server error codes can be added without changing the reader loop.
 
-The remaining MVP connection work is basic reconnect behavior. That should be
-added with focused red-green tests and a documented retry policy.
+Basic reconnect behavior is documented in [Reconnect Policy](reconnect-policy.md).
