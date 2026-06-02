@@ -20,7 +20,10 @@ Ruby Apache Pulsar client.
 - Sending message frames and routing send receipts back to the waiting send.
 - Mapping `CommandError` and `CommandSendError` responses to typed Ruby errors.
 - Running a background reader thread after the connect handshake.
+- Responding to broker `PING` frames with `PONG`.
 - Registering consumers and routing broker-pushed messages by consumer ID.
+- Marking the connection disconnected and rejecting pending work when the broker
+  socket closes unexpectedly.
 - Closing idempotently.
 
 ## Internal API
@@ -50,9 +53,5 @@ fulfills when matching broker responses arrive.
 Broker error mapping is centralized in `Pulsar::Internal::BrokerErrorMapper` so
 future server error codes can be added without changing the reader loop.
 
-The remaining MVP connection work is:
-
-- Ping/pong handling.
-- Connection loss behavior.
-
-These should be added with focused red-green tests before reconnect work.
+The remaining MVP connection work is basic reconnect behavior. That should be
+added with focused red-green tests and a documented retry policy.

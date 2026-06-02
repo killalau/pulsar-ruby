@@ -9,12 +9,12 @@ This folder contains design notes for the Ruby Apache Pulsar client.
   examples, alternatives, and Ruby-specific risks.
 - [Connection Handshake](connection-handshake.md): Implemented connect
   handshake, request ID allocation, pending request routing, background reader
-  behavior, broker error mapping, and remaining connection work.
+  behavior, broker error mapping, ping/pong, and connection-loss handling.
 - [Command Factory](command-factory.md): Internal protobuf command construction
-  for producer, send, subscribe, flow, ack, lookup, and close commands.
+  for producer, send, subscribe, flow, ack, lookup, close, and pong commands.
 - [Consumer Implementation](consumer-impl.md): Internal subscription creation,
-  flow permits, queued receive behavior, ack and close commands, and remaining
-  consumer work.
+  flow permits, permit replenishment, queued receive behavior, ack, and close
+  commands.
 - [Frame Codec](frame-codec.md): Implemented binary frame encoding and decoding
   behavior, current limits, and validation rules.
 - [Lookup Service](lookup-service.md): Binary topic lookup behavior, current

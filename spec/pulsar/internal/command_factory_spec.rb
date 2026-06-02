@@ -99,4 +99,11 @@ RSpec.describe Pulsar::Internal::CommandFactory do
     expect(command.close_consumer.consumer_id).to eq(11)
     expect(command.close_consumer.request_id).to eq(22)
   end
+
+  it "builds pong commands" do
+    command = described_class.pong
+
+    expect(command.type).to eq(:PONG)
+    expect(command.pong).to be_a(Pulsar::Proto::CommandPong)
+  end
 end

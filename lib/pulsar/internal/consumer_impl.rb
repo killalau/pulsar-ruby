@@ -58,7 +58,9 @@ module Pulsar
       def receive(timeout: nil)
         raise ClosedError, "consumer is closed" if closed?
 
-        @receiver_queue.pop(timeout: timeout || @operation_timeout)
+        @receiver_queue.pop(timeout: timeout || @operation_timeout).tap do
+          flow(1)
+        end
       end
 
       def ack(message_or_message_id)

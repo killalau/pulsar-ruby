@@ -9,7 +9,7 @@ other features over time.
 
 **Status:** Early development. The public API, protocol definitions, frame codec,
 plaintext TCP transport, connection reader, and initial producer/consumer protocol
-paths are in place. Real broker integration is being brought up against Pulsar
+paths are in place. The producer/consumer happy path is verified against Pulsar
 standalone.
 
 ## Requirements
@@ -74,7 +74,7 @@ Run the local Pulsar standalone integration spec:
 
 ```bash
 docker compose up -d pulsar
-PULSAR_INTEGRATION=1 bundle exec rspec spec/integration/standalone_spec.rb
+bundle exec rake spec:integration
 ```
 
 ### Project layout

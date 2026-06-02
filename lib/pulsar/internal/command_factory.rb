@@ -105,6 +105,13 @@ module Pulsar
           )
         )
       end
+
+      def self.pong
+        Proto::BaseCommand.new(
+          type: :PONG,
+          pong: Proto::CommandPong.new
+        )
+      end
     end
   end
 end

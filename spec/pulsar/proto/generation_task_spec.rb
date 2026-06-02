@@ -6,4 +6,10 @@ RSpec.describe "protobuf generation task" do
 
     expect(Rake::Task.task_defined?("proto:generate")).to be(true)
   end
+
+  it "defines spec:integration" do
+    load File.expand_path("../../../Rakefile", __dir__)
+
+    expect(Rake::Task.task_defined?("spec:integration")).to be(true)
+  end
 end

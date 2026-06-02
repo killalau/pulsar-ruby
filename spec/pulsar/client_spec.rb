@@ -172,6 +172,10 @@ RSpec.describe Pulsar::Client do
       )
       socket.write(Pulsar::Internal::FrameCodec.encode_message(message_command, metadata, "hello-consumer"))
 
+      replenishment_flow_command = Pulsar::Internal::FrameCodec.decode_frame(read_frame(socket)).command
+      expect(replenishment_flow_command.type).to eq(:FLOW)
+      expect(replenishment_flow_command.flow.messagePermits).to eq(1)
+
       ack_command = Pulsar::Internal::FrameCodec.decode_frame(read_frame(socket)).command
 
       close_command = Pulsar::Internal::FrameCodec.decode_frame(read_frame(socket)).command

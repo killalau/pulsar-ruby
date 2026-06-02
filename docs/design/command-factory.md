@@ -18,6 +18,7 @@ It currently builds:
 - Lookup commands.
 - Close producer commands.
 - Close consumer commands.
+- Pong commands.
 
 ## Implemented API
 
@@ -30,6 +31,7 @@ Pulsar::Internal::CommandFactory.ack(...)
 Pulsar::Internal::CommandFactory.lookup(...)
 Pulsar::Internal::CommandFactory.close_producer(...)
 Pulsar::Internal::CommandFactory.close_consumer(...)
+Pulsar::Internal::CommandFactory.pong
 ```
 
 The generated protobuf field named `send` collides with Ruby's `Object#send`.
@@ -43,5 +45,4 @@ command["send"]
 ## Current Limits
 
 The factory only covers commands needed by the first producer/consumer MVP
-path. Partition metadata, ping/pong, and negative ack commands are still
-pending.
+path. Partition metadata and negative ack commands are still pending.

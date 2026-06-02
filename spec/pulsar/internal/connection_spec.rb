@@ -37,6 +37,7 @@ RSpec.describe Pulsar::Internal::Connection do
         )
       )
       socket.write(Pulsar::Internal::FrameCodec.encode_command(connected))
+      socket.read
     end
 
     connection = described_class.connect(
@@ -109,6 +110,33 @@ RSpec.describe Pulsar::Internal::Connection do
 
     connection.close
     server_thread.join
+  end
+
+  it "stops the reader thread when closed" do
+    port, server_thread = with_fake_broker do |socket|
+      read_frame(socket)
+      connected = Pulsar::Proto::BaseCommand.new(
+        type: :CONNECTED,
+        connected: Pulsar::Proto::CommandConnected.new(server_version: "fake-broker", protocol_version: 21)
+      )
+      socket.write(Pulsar::Internal::FrameCodec.encode_command(connected))
+      socket.read
+    end
+    connection = described_class.connect(
+      host: "127.0.0.1",
+      port: port,
+      connection_timeout: 1,
+      operation_timeout: 1,
+      client_version: "pulsar-ruby-test"
+    )
+
+    reader_thread = connection.instance_variable_get(:@reader_thread)
+    expect(reader_thread).to be_alive
+
+    connection.close
+    server_thread.join
+
+    expect(reader_thread).not_to be_alive
   end
 
   it "sends a request command and returns the broker response" do
@@ -207,6 +235,87 @@ RSpec.describe Pulsar::Internal::Connection do
     server_thread.join
   end
 
+  it "marks the connection disconnected and rejects pending requests when the broker closes the socket" do
+    port, server_thread = with_fake_broker do |socket|
+      read_frame(socket)
+      connected = Pulsar::Proto::BaseCommand.new(
+        type: :CONNECTED,
+        connected: Pulsar::Proto::CommandConnected.new(server_version: "fake-broker", protocol_version: 21)
+      )
+      socket.write(Pulsar::Internal::FrameCodec.encode_command(connected))
+
+      request = Pulsar::Internal::FrameCodec.decode_frame(read_frame(socket)).command
+      expect(request.type).to eq(:PRODUCER)
+    end
+    connection = described_class.connect(
+      host: "127.0.0.1",
+      port: port,
+      connection_timeout: 1,
+      operation_timeout: 1,
+      client_version: "pulsar-ruby-test"
+    )
+    command = Pulsar::Proto::BaseCommand.new(
+      type: :PRODUCER,
+      producer: Pulsar::Proto::CommandProducer.new(
+        topic: "persistent://public/default/test",
+        producer_id: 1,
+        request_id: 7
+      )
+    )
+
+    expect { connection.request(command, timeout: 1) }
+      .to raise_error(Pulsar::ConnectionError, /connection lost/)
+    expect(connection).not_to be_connected
+
+    connection.close
+    server_thread.join
+  end
+
+  it "rejects pending requests when closed" do
+    request_seen = Queue.new
+    port, server_thread = with_fake_broker do |socket|
+      read_frame(socket)
+      connected = Pulsar::Proto::BaseCommand.new(
+        type: :CONNECTED,
+        connected: Pulsar::Proto::CommandConnected.new(server_version: "fake-broker", protocol_version: 21)
+      )
+      socket.write(Pulsar::Internal::FrameCodec.encode_command(connected))
+
+      request = Pulsar::Internal::FrameCodec.decode_frame(read_frame(socket)).command
+      expect(request.type).to eq(:PRODUCER)
+      request_seen << true
+      socket.read
+    end
+    connection = described_class.connect(
+      host: "127.0.0.1",
+      port: port,
+      connection_timeout: 1,
+      operation_timeout: 5,
+      client_version: "pulsar-ruby-test"
+    )
+    command = Pulsar::Proto::BaseCommand.new(
+      type: :PRODUCER,
+      producer: Pulsar::Proto::CommandProducer.new(
+        topic: "persistent://public/default/test",
+        producer_id: 1,
+        request_id: 7
+      )
+    )
+    error = nil
+    pending = Thread.new do
+      connection.request(command, timeout: 5)
+    rescue Pulsar::Error => e
+      error = e
+    end
+
+    request_seen.pop
+    connection.close
+    pending.join
+    server_thread.join
+
+    expect(error).to be_a(Pulsar::ClosedError)
+  end
+
   it "sends message frames and returns the broker response" do
     port, server_thread = with_fake_broker do |socket|
       read_frame(socket)
@@ -252,6 +361,49 @@ RSpec.describe Pulsar::Internal::Connection do
 
     connection.close
     server_thread.join
+  end
+
+  it "rejects pending sends when closed" do
+    send_seen = Queue.new
+    port, server_thread = with_fake_broker do |socket|
+      read_frame(socket)
+      connected = Pulsar::Proto::BaseCommand.new(
+        type: :CONNECTED,
+        connected: Pulsar::Proto::CommandConnected.new(server_version: "fake-broker", protocol_version: 21)
+      )
+      socket.write(Pulsar::Internal::FrameCodec.encode_command(connected))
+
+      decoded = Pulsar::Internal::FrameCodec.decode_frame(read_frame(socket))
+      expect(decoded.command.type).to eq(:SEND)
+      send_seen << true
+      socket.read
+    end
+    connection = described_class.connect(
+      host: "127.0.0.1",
+      port: port,
+      connection_timeout: 1,
+      operation_timeout: 5,
+      client_version: "pulsar-ruby-test"
+    )
+    command, metadata = Pulsar::Internal::CommandFactory.send_message(
+      producer_id: 1,
+      sequence_id: 0,
+      producer_name: "ruby-producer",
+      publish_time: 1
+    )
+    error = nil
+    pending = Thread.new do
+      connection.send_message(command, metadata, "hello", timeout: 5)
+    rescue Pulsar::Error => e
+      error = e
+    end
+
+    send_seen.pop
+    connection.close
+    pending.join
+    server_thread.join
+
+    expect(error).to be_a(Pulsar::ClosedError)
   end
 
   it "maps send error responses to typed errors" do
@@ -325,6 +477,39 @@ RSpec.describe Pulsar::Internal::Connection do
 
     expect(written_command.type).to eq(:FLOW)
     expect(written_command.flow.consumer_id).to eq(3)
+  end
+
+  it "responds to broker ping frames with pong" do
+    pong_command = nil
+    port, server_thread = with_fake_broker do |socket|
+      read_frame(socket)
+      connected = Pulsar::Proto::BaseCommand.new(
+        type: :CONNECTED,
+        connected: Pulsar::Proto::CommandConnected.new(server_version: "fake-broker", protocol_version: 21)
+      )
+      socket.write(Pulsar::Internal::FrameCodec.encode_command(connected))
+
+      ping = Pulsar::Proto::BaseCommand.new(type: :PING, ping: Pulsar::Proto::CommandPing.new)
+      socket.write(Pulsar::Internal::FrameCodec.encode_command(ping))
+      pong_command = Pulsar::Internal::FrameCodec.decode_frame(read_frame(socket)).command
+      socket.read
+    end
+    connection = described_class.connect(
+      host: "127.0.0.1",
+      port: port,
+      connection_timeout: 1,
+      operation_timeout: 1,
+      client_version: "pulsar-ruby-test"
+    )
+
+    Timeout.timeout(1) do
+      sleep 0.001 until pong_command
+    end
+
+    connection.close
+    server_thread.join
+
+    expect(pong_command.type).to eq(:PONG)
   end
 
   it "routes broker-pushed message frames to registered consumers" do

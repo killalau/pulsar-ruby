@@ -166,8 +166,14 @@ module Pulsar
 
           route_frame(read_decoded_frame(timeout: @operation_timeout))
         end
-      rescue ClosedError, ConnectionError
+      rescue ClosedError
         reject_pending(ClosedError.new("connection is closed")) unless closed?
+      rescue ConnectionError => e
+        if closed?
+          reject_pending(ClosedError.new("connection is closed"))
+        else
+          fail_connection(ConnectionError.new("connection lost: #{e.message}"))
+        end
       rescue Error => e
         reject_pending(e)
       end
@@ -178,6 +184,8 @@ module Pulsar
         case command.type
         when :MESSAGE
           consumer_for(command.message.consumer_id)&.handle_message(command.message, decoded.headers_and_payload)
+        when :PING
+          write_command(CommandFactory.pong)
         when :SEND_RECEIPT
           fulfill_pending_send(command.send_receipt.producer_id, command.send_receipt.sequence_id, command)
         when :SEND_ERROR
@@ -239,6 +247,11 @@ module Pulsar
            @pending_sends.values.tap { @pending_sends.clear }]
         end
         (requests + sends).each { |promise| promise.reject(error) }
+      end
+
+      def fail_connection(error)
+        @state_mutex.synchronize { @connected = false }
+        reject_pending(error)
       end
 
       def request_id_for(command)
