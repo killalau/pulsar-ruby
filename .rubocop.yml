@@ -64,8 +64,5 @@ Style/Documentation:
 Style/IfUnlessModifier:
   Enabled: false
 
-Style/KeywordParametersOrder:
-  Enabled: false
-
 Style/SymbolProc:
   Enabled: false

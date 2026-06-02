@@ -14,8 +14,8 @@ module Pulsar
         )
       end
 
-      def self.send_message(producer_id:, sequence_id:, producer_name:, properties: {}, key: nil,
-                            event_time: nil, publish_time:)
+      def self.send_message(producer_id:, sequence_id:, producer_name:, publish_time:, properties: {}, key: nil,
+                            event_time: nil)
         command = Proto::BaseCommand.new(
           type: :SEND,
           send: Proto::CommandSend.new(
