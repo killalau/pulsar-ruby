@@ -25,7 +25,7 @@ RSpec.describe Pulsar::Internal::FrameCodec do
   end
 
   it 'rejects incomplete frames' do
-    frame = [10].pack('N') + 'abc'
+    frame = "#{[10].pack('N')}abc"
 
     expect { described_class.decode_frame(frame) }
       .to raise_error(Pulsar::ProtocolError, /frame is incomplete/)
@@ -70,7 +70,7 @@ RSpec.describe Pulsar::Internal::FrameCodec do
   end
 
   it 'rejects message data with incomplete metadata' do
-    headers_and_payload = [10].pack('N') + 'short'
+    headers_and_payload = "#{[10].pack('N')}short"
 
     expect { described_class.decode_message_data(headers_and_payload) }
       .to raise_error(Pulsar::ProtocolError, /metadata exceeds message data size/)

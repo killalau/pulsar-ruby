@@ -67,9 +67,6 @@ Style/IfUnlessModifier:
 Style/KeywordParametersOrder:
   Enabled: false
 
-Style/StringConcatenation:
-  Enabled: false
-
 Style/StringLiteralsInInterpolation:
   Enabled: false
 
