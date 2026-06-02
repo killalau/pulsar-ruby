@@ -34,6 +34,7 @@ module Pulsar
 
       def send(payload, properties: {}, key: nil, event_time: nil, timeout: nil)
         raise ClosedError, "producer is closed" if closed?
+
         send_timeout = timeout || @operation_timeout
         acquire_pending_send(timeout: send_timeout)
 

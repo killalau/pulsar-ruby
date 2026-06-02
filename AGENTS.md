@@ -33,6 +33,8 @@ For each new behavior or bug fix:
 - Implement the smallest change that makes the test pass.
 - Re-run the targeted test.
 - Run the broader relevant test suite before committing.
+- Run `bundle exec rake verify` before committing changes that affect Ruby code,
+  tests, or development tooling.
 
 Do not skip the red test step unless the change is documentation-only,
 configuration-only, or otherwise cannot reasonably be tested.

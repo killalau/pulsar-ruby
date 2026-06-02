@@ -95,7 +95,7 @@ RSpec.describe Pulsar::Client do
 
   it "rejects unsupported service URL schemes" do
     expect { described_class.new("http://localhost:6650") }
-      .to raise_error(Pulsar::ConfigurationError, /pulsar:\/\//)
+      .to raise_error(Pulsar::ConfigurationError, %r{pulsar://})
   end
 
   it "rejects new resources after close" do

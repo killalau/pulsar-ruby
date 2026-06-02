@@ -122,8 +122,10 @@ design rationale.
 
 ```bash
 bundle install
-bundle exec rspec
+bundle exec rake verify
 ```
+
+`bundle exec rake verify` runs RuboCop and the normal RSpec suite.
 
 Run the local Pulsar standalone integration spec:
 
@@ -137,6 +139,19 @@ Build the local gem package:
 ```bash
 gem build pulsar-ruby.gemspec
 ```
+
+### Git hooks
+
+This repository includes a versioned pre-push hook in `.githooks/pre-push`.
+Enable it for this checkout with:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+After that, `git push` runs `bundle exec rake verify` before sending commits.
+The hook does not run standalone integration specs because they require a local
+broker and are slower than the regular push guard.
 
 ### Project layout
 

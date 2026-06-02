@@ -39,7 +39,7 @@ RSpec.describe Pulsar::Internal::FrameCodec do
     encoded_command = Pulsar::Proto::BaseCommand.encode(command)
     headers_and_payload = "metadata-and-payload".b
     frame = [4 + encoded_command.bytesize + headers_and_payload.bytesize, encoded_command.bytesize]
-      .pack("NN") + encoded_command + headers_and_payload
+            .pack("NN") + encoded_command + headers_and_payload
 
     decoded = described_class.decode_frame(frame)
 

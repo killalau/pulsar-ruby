@@ -6,4 +6,11 @@ RSpec.describe "gem specification" do
 
     expect(spec.files).to include("proto/PulsarApi.proto")
   end
+
+  it "includes development lint dependencies" do
+    spec = Gem::Specification.load("pulsar-ruby.gemspec")
+
+    dependency_names = spec.development_dependencies.map(&:name)
+    expect(dependency_names).to include("rubocop", "rubocop-rspec")
+  end
 end

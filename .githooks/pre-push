@@ -1,0 +1,7 @@
+#!/bin/sh
+set -eu
+
+export RUBOCOP_CACHE_ROOT="${RUBOCOP_CACHE_ROOT:-.bundle/rubocop_cache}"
+
+echo "Running pre-push verification: bundle exec rake verify"
+bundle exec rake verify

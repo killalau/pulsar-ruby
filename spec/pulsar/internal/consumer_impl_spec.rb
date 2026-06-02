@@ -168,6 +168,6 @@ RSpec.describe Pulsar::Internal::ConsumerImpl do
     consumer.ack(message_id)
 
     expect(second_connection.requests.map { |command, _timeout| command.type }).to eq([:SUBSCRIBE])
-    expect(second_connection.writes.map(&:type)).to eq([:FLOW, :ACK])
+    expect(second_connection.writes.map(&:type)).to eq(%i[FLOW ACK])
   end
 end
