@@ -15,9 +15,7 @@ module Pulsar
           timeout: @operation_timeout
         )
 
-        unless response.type == :LOOKUP_RESPONSE
-          raise BrokerError, "lookup failed: #{response.type}"
-        end
+        raise BrokerError, "lookup failed: #{response.type}" unless response.type == :LOOKUP_RESPONSE
 
         lookup = response.lookupTopicResponse
         raise BrokerError, "lookup failed: #{lookup.message}" unless lookup.response == :Connect

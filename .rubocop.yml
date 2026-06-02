@@ -60,6 +60,3 @@ Style/AccessorGrouping:
 
 Style/Documentation:
   Enabled: false
-
-Style/IfUnlessModifier:
-  Enabled: false

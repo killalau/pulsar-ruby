@@ -52,9 +52,7 @@ module Pulsar
           )
           response = @connection.send_message(command, metadata, String(payload).b, timeout: send_timeout)
 
-          unless response.type == :SEND_RECEIPT
-            raise BrokerError, "send failed: #{response.type}"
-          end
+          raise BrokerError, "send failed: #{response.type}" unless response.type == :SEND_RECEIPT
 
           message_id_from(response.send_receipt.message_id)
         ensure
@@ -88,9 +86,7 @@ module Pulsar
         command = CommandFactory.producer(topic: topic, producer_id: producer_id, request_id: request_id)
         response = @connection.request(command, timeout: @operation_timeout)
 
-        unless response.type == :PRODUCER_SUCCESS
-          raise BrokerError, "producer creation failed: #{response.type}"
-        end
+        raise BrokerError, "producer creation failed: #{response.type}" unless response.type == :PRODUCER_SUCCESS
 
         @producer_name = response.producer_success.producer_name
         nil

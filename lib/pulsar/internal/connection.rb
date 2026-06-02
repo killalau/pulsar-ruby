@@ -33,9 +33,7 @@ module Pulsar
       def connect
         write_connect_command
         command = read_command(timeout: @operation_timeout)
-        unless command.type == :CONNECTED
-          raise ProtocolError, "expected CONNECTED response, got #{command.type}"
-        end
+        raise ProtocolError, "expected CONNECTED response, got #{command.type}" unless command.type == :CONNECTED
 
         @server_version = command.connected.server_version
         @protocol_version = command.connected.protocol_version
