@@ -129,7 +129,7 @@ module Pulsar
       unsupported = options.keys & %i[authentication tls]
       return if unsupported.empty?
 
-      raise ConfigurationError, "unsupported MVP option(s): #{unsupported.join(", ")}"
+      raise ConfigurationError, "unsupported MVP option(s): #{unsupported.join(', ')}"
     end
   end
 end

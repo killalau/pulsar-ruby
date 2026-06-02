@@ -67,8 +67,5 @@ Style/IfUnlessModifier:
 Style/KeywordParametersOrder:
   Enabled: false
 
-Style/StringLiteralsInInterpolation:
-  Enabled: false
-
 Style/SymbolProc:
   Enabled: false
