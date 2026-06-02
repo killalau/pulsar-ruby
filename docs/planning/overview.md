@@ -7,3 +7,6 @@ Apache Pulsar client.
 
 - [Implementation Roadmap](implementation-roadmap.md): Ordered build plan for
   moving from design documents to a working MVP client.
+- [Integration Test Backlog](integration-test-backlog.md): Standalone
+  integration scenarios that are active now or deferred until supporting
+  features exist.
