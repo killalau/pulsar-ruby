@@ -3,7 +3,7 @@
 RSpec.describe Pulsar::Internal::ProducerImpl do
   class FakeProducerConnection
     attr_reader :requests, :messages
-    attr_writer :connected
+    attr_writer :connected, :send_delay
 
     def initialize
       @request_id = 0
@@ -12,8 +12,6 @@ RSpec.describe Pulsar::Internal::ProducerImpl do
       @send_delay = nil
       @connected = true
     end
-
-    attr_writer :send_delay
 
     def next_request_id
       @request_id += 1

@@ -55,8 +55,5 @@ Lint/ConstantDefinitionInBlock:
   Exclude:
     - "spec/**/*"
 
-Style/AccessorGrouping:
-  Enabled: false
-
 Style/Documentation:
   Enabled: false
