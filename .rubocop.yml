@@ -10,9 +10,6 @@ AllCops:
     - "vendor/**/*"
     - ".research/**/*"
 
-Gemspec/DevelopmentDependencies:
-  Enabled: false
-
 Layout/LineLength:
   Max: 130
 
