@@ -21,5 +21,6 @@ require_relative 'pulsar/internal/producer_impl'
 require_relative 'pulsar/internal/consumer_impl'
 require_relative 'pulsar/internal/lookup_service'
 
+# Root namespace for the pure Ruby Apache Pulsar client.
 module Pulsar
 end

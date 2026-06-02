@@ -5,6 +5,7 @@ require 'timeout'
 
 module Pulsar
   module Internal
+    # Plain TCP transport for reading and writing broker frames.
     class TcpTransport
       def self.connect(host:, port:, connection_timeout:)
         socket = Socket.tcp(host, port, connect_timeout: connection_timeout)

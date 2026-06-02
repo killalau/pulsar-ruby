@@ -2,6 +2,7 @@
 
 module Pulsar
   module Internal
+    # Implements broker-side producer creation and unbatched sends.
     class ProducerImpl
       attr_reader :topic, :producer_id, :producer_name
 

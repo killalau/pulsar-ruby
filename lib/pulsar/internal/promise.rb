@@ -2,6 +2,7 @@
 
 module Pulsar
   module Internal
+    # Thread-safe one-shot completion primitive for async broker responses.
     class Promise
       def initialize
         @mutex = Mutex.new

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module Pulsar
+  # Public consumer API for receiving and acknowledging messages.
   class Consumer
     attr_reader :topic, :subscription
 

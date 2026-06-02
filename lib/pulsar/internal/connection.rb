@@ -2,6 +2,7 @@
 
 module Pulsar
   module Internal
+    # Owns a broker socket, request correlation, and reader thread.
     class Connection
       PROTOCOL_VERSION = 21
 

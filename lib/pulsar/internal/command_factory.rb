@@ -2,6 +2,7 @@
 
 module Pulsar
   module Internal
+    # Builds protobuf commands for the Pulsar binary protocol.
     class CommandFactory
       def self.producer(topic:, producer_id:, request_id:)
         Proto::BaseCommand.new(

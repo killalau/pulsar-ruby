@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module Pulsar
+  # Comparable Pulsar message identifier.
   class MessageId
     include Comparable
 

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module Pulsar
+  # Public producer API for sending messages to one Pulsar topic.
   class Producer
     attr_reader :topic
 

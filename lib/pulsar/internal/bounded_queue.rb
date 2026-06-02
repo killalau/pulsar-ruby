@@ -2,6 +2,7 @@
 
 module Pulsar
   module Internal
+    # Sized queue wrapper with close and timeout behavior.
     class BoundedQueue
       def initialize(capacity:)
         raise ArgumentError, 'capacity must be positive' unless capacity.positive?

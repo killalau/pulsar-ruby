@@ -2,6 +2,7 @@
 
 module Pulsar
   module Internal
+    # Tracks background threads and queues for coordinated shutdown.
     class ThreadRuntime
       def initialize
         @mutex = Mutex.new

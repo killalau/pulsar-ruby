@@ -2,6 +2,7 @@
 
 module Pulsar
   module Internal
+    # Encodes and decodes Pulsar binary protocol frames.
     class FrameCodec
       DecodedFrame = Struct.new(:command, :headers_and_payload, keyword_init: true)
       DecodedMessageData = Struct.new(:metadata, :payload, keyword_init: true)

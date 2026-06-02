@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module Pulsar
+  # Immutable message value returned by consumers.
   class Message
     attr_reader :payload, :message_id, :properties, :key, :topic, :publish_time, :event_time
 

@@ -4,6 +4,7 @@ require 'set'
 require 'uri'
 
 module Pulsar
+  # Entry point for creating producers and consumers against a Pulsar broker.
   class Client
     DEFAULT_OPERATION_TIMEOUT = 30
     DEFAULT_CONNECTION_TIMEOUT = 10

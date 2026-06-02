@@ -2,6 +2,7 @@
 
 module Pulsar
   module Internal
+    # Implements broker-side subscription, flow, receive, and ack behavior.
     class ConsumerImpl
       attr_reader :topic, :subscription, :consumer_id
 

@@ -2,6 +2,7 @@
 
 module Pulsar
   module Internal
+    # Resolves the broker service URL that owns a topic.
     class LookupService
       def initialize(connection:, operation_timeout:)
         @connection = connection

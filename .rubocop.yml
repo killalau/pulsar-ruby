@@ -51,6 +51,3 @@ RSpec/MultipleExpectations:
 Lint/ConstantDefinitionInBlock:
   Exclude:
     - "spec/**/*"
-
-Style/Documentation:
-  Enabled: false

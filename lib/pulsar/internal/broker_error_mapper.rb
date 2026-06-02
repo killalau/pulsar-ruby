@@ -2,6 +2,7 @@
 
 module Pulsar
   module Internal
+    # Converts broker protocol error codes into typed client exceptions.
     class BrokerErrorMapper
       ERROR_CLASSES = {
         AuthenticationError: AuthenticationError,
