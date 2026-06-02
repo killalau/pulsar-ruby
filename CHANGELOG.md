@@ -2,9 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
-## 0.1.0 - Unreleased
+## 0.1.0.pre - Unreleased
 
-Initial MVP release for the pure Ruby Apache Pulsar client.
+Initial MVP prerelease for the pure Ruby Apache Pulsar client.
 
 ### Added
 

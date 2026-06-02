@@ -39,11 +39,11 @@ be run before publishing so the final artifact path and version are visible.
 
 ## Publish Decision
 
-For the first public package, decide whether to publish:
+The first public package should be `0.1.0.pre`. This marks the first RubyGems
+artifact as a prerelease while users test the API.
 
-- `0.1.0.pre`: use this if the first RubyGems artifact should be explicitly
-  pre-release while users test the API.
-- `0.1.0`: use this if the MVP API is ready to be the first public baseline.
+Use `0.1.0` later when the MVP API is ready to be the first stable public
+baseline.
 
 ## After Release
 

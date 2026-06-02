@@ -64,8 +64,7 @@ The first MVP release should use these conservative decisions:
 Before publishing to RubyGems, do a final release pass:
 
 - Confirm gem name availability and ownership.
-- Decide whether version `0.1.0` is the first public version or whether to cut a
-  pre-release.
+- Publish `0.1.0.pre` as the first public prerelease.
 - Confirm the release notes in `CHANGELOG.md`.
 - Run the verification baseline on a clean checkout.
 - Run the installed-gem smoke test from the built artifact.
