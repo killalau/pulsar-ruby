@@ -1,49 +1,51 @@
 # frozen_string_literal: true
 
 RSpec.describe Pulsar::Internal::ConsumerImpl do
-  class FakeConsumerConnection
-    attr_reader :requests, :writes
-    attr_writer :connected
+  before do
+    stub_const('FakeConsumerConnection', Class.new do
+      attr_reader :requests, :writes
+      attr_writer :connected
 
-    def initialize
-      @request_id = 0
-      @requests = []
-      @writes = []
-      @connected = true
-    end
+      def initialize
+        @request_id = 0
+        @requests = []
+        @writes = []
+        @connected = true
+      end
 
-    def next_request_id
-      @request_id += 1
-    end
+      def next_request_id
+        @request_id += 1
+      end
 
-    def connected?
-      @connected
-    end
+      def connected?
+        @connected
+      end
 
-    def request(command, timeout:)
-      @requests << [command, timeout]
-      request_id = if command.type == :CLOSE_CONSUMER
-                     command.close_consumer.request_id
-                   else
-                     command.subscribe.request_id
-                   end
-      Pulsar::Proto::BaseCommand.new(
-        type: :SUCCESS,
-        success: Pulsar::Proto::CommandSuccess.new(request_id: request_id)
-      )
-    end
+      def request(command, timeout:)
+        @requests << [command, timeout]
+        request_id = if command.type == :CLOSE_CONSUMER
+                       command.close_consumer.request_id
+                     else
+                       command.subscribe.request_id
+                     end
+        Pulsar::Proto::BaseCommand.new(
+          type: :SUCCESS,
+          success: Pulsar::Proto::CommandSuccess.new(request_id: request_id)
+        )
+      end
 
-    def write_command(command)
-      @writes << command
-    end
+      def write_command(command)
+        @writes << command
+      end
 
-    def register_consumer(_consumer_id, _consumer)
-      nil
-    end
+      def register_consumer(_consumer_id, _consumer)
+        nil
+      end
 
-    def unregister_consumer(_consumer_id)
-      nil
-    end
+      def unregister_consumer(_consumer_id)
+        nil
+      end
+    end)
   end
 
   it 'subscribes, receives a message, sends flow, and acks' do

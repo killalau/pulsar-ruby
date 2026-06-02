@@ -1,23 +1,25 @@
 # frozen_string_literal: true
 
 RSpec.describe Pulsar::Internal::LookupService do
-  class FakeLookupConnection
-    attr_reader :requests
+  before do
+    stub_const('FakeLookupConnection', Class.new do
+      attr_reader :requests
 
-    def initialize(response)
-      @response = response
-      @request_id = 0
-      @requests = []
-    end
+      def initialize(response)
+        @response = response
+        @request_id = 0
+        @requests = []
+      end
 
-    def next_request_id
-      @request_id += 1
-    end
+      def next_request_id
+        @request_id += 1
+      end
 
-    def request(command, timeout:)
-      @requests << [command, timeout]
-      @response
-    end
+      def request(command, timeout:)
+        @requests << [command, timeout]
+        @response
+      end
+    end)
   end
 
   it 'returns broker service URLs for successful lookup responses' do

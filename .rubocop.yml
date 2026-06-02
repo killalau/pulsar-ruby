@@ -39,9 +39,6 @@ RSpec/ExampleLength:
 RSpec/InstanceVariable:
   Enabled: false
 
-RSpec/LeakyConstantDeclaration:
-  Enabled: false
-
 RSpec/DescribeClass:
   Enabled: false
 

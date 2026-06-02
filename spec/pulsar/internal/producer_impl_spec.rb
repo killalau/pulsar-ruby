@@ -1,61 +1,63 @@
 # frozen_string_literal: true
 
 RSpec.describe Pulsar::Internal::ProducerImpl do
-  class FakeProducerConnection
-    attr_reader :requests, :messages
-    attr_writer :connected, :send_delay
+  before do
+    stub_const('FakeProducerConnection', Class.new do
+      attr_reader :requests, :messages
+      attr_writer :connected, :send_delay
 
-    def initialize
-      @request_id = 0
-      @requests = []
-      @messages = []
-      @send_delay = nil
-      @connected = true
-    end
+      def initialize
+        @request_id = 0
+        @requests = []
+        @messages = []
+        @send_delay = nil
+        @connected = true
+      end
 
-    def next_request_id
-      @request_id += 1
-    end
+      def next_request_id
+        @request_id += 1
+      end
 
-    def connected?
-      @connected
-    end
+      def connected?
+        @connected
+      end
 
-    def request(command, timeout:)
-      @requests << [command, timeout]
-      return success_response(command.close_producer.request_id) if command.type == :CLOSE_PRODUCER
+      def request(command, timeout:)
+        @requests << [command, timeout]
+        return success_response(command.close_producer.request_id) if command.type == :CLOSE_PRODUCER
 
-      Pulsar::Proto::BaseCommand.new(
-        type: :PRODUCER_SUCCESS,
-        producer_success: Pulsar::Proto::CommandProducerSuccess.new(
-          request_id: command.producer.request_id,
-          producer_name: 'ruby-producer',
-          schema_version: ''.b
+        Pulsar::Proto::BaseCommand.new(
+          type: :PRODUCER_SUCCESS,
+          producer_success: Pulsar::Proto::CommandProducerSuccess.new(
+            request_id: command.producer.request_id,
+            producer_name: 'ruby-producer',
+            schema_version: ''.b
+          )
         )
-      )
-    end
+      end
 
-    def send_message(command, metadata, payload, timeout:)
-      sleep @send_delay if @send_delay
-      @messages << [command, metadata, payload, timeout]
-      Pulsar::Proto::BaseCommand.new(
-        type: :SEND_RECEIPT,
-        send_receipt: Pulsar::Proto::CommandSendReceipt.new(
-          producer_id: command['send'].producer_id,
-          sequence_id: command['send'].sequence_id,
-          message_id: Pulsar::Proto::MessageIdData.new(ledgerId: 10, entryId: 20, partition: -1, batch_index: -1)
+      def send_message(command, metadata, payload, timeout:)
+        sleep @send_delay if @send_delay
+        @messages << [command, metadata, payload, timeout]
+        Pulsar::Proto::BaseCommand.new(
+          type: :SEND_RECEIPT,
+          send_receipt: Pulsar::Proto::CommandSendReceipt.new(
+            producer_id: command['send'].producer_id,
+            sequence_id: command['send'].sequence_id,
+            message_id: Pulsar::Proto::MessageIdData.new(ledgerId: 10, entryId: 20, partition: -1, batch_index: -1)
+          )
         )
-      )
-    end
+      end
 
-    private
+      private
 
-    def success_response(request_id)
-      Pulsar::Proto::BaseCommand.new(
-        type: :SUCCESS,
-        success: Pulsar::Proto::CommandSuccess.new(request_id: request_id)
-      )
-    end
+      def success_response(request_id)
+        Pulsar::Proto::BaseCommand.new(
+          type: :SUCCESS,
+          success: Pulsar::Proto::CommandSuccess.new(request_id: request_id)
+        )
+      end
+    end)
   end
 
   it 'creates a broker-side producer and sends one unbatched message' do
