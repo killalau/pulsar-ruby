@@ -69,7 +69,7 @@ Before publishing to RubyGems, do a final release pass:
 - Run the verification baseline on a clean checkout.
 - Run the installed-gem smoke test from the built artifact.
 
-Use [Release Checklist](release-checklist.md) for the concrete release sequence.
+Use [Release Runbook](../release-runbook.md) for the concrete release sequence.
 
 ## Deferred Product Work
 

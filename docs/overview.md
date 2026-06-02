@@ -9,5 +9,7 @@ designing a Ruby client for Apache Pulsar.
   the Ruby client.
 - [Planning](planning/overview.md): Implementation plans for moving from
   research and design toward a working Ruby client.
+- [Release Runbook](release-runbook.md): Step-by-step version bump,
+  verification, publishing, and post-release process for gem releases.
 - [Research](research/overview.md): Research notes, references, and findings
   that inform the client design.
