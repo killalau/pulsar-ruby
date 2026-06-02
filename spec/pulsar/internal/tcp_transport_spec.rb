@@ -33,7 +33,7 @@ RSpec.describe Pulsar::Internal::TcpTransport do
   end
 
   it 'closes idempotently and rejects operations after close' do
-    port, server_thread = with_tcp_server { |socket| socket.read }
+    port, server_thread = with_tcp_server(&:read)
     transport = described_class.connect(host: '127.0.0.1', port: port, connection_timeout: 1)
 
     expect(transport.close).to be_nil
