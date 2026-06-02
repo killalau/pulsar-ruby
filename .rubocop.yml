@@ -41,7 +41,3 @@ RSpec/InstanceVariable:
 
 RSpec/MultipleExpectations:
   Max: 12
-
-Lint/ConstantDefinitionInBlock:
-  Exclude:
-    - "spec/**/*"
