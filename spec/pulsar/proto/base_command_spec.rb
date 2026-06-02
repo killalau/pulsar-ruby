@@ -2,7 +2,7 @@
 
 require 'pulsar/proto/pulsar_api_pb'
 
-RSpec.describe 'Pulsar protobuf definitions' do
+RSpec.describe Pulsar::Proto::BaseCommand do
   it 'loads generated message classes for protocol commands' do
     message_id = Pulsar::Proto::MessageIdData.new(
       ledgerId: 1,
@@ -11,7 +11,7 @@ RSpec.describe 'Pulsar protobuf definitions' do
       batch_index: -1
     )
 
-    command = Pulsar::Proto::BaseCommand.new(
+    command = described_class.new(
       type: :CONNECT,
       connect: Pulsar::Proto::CommandConnect.new(
         client_version: 'pulsar-ruby-test',

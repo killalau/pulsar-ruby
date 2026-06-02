@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe 'Pulsar standalone integration' do
+RSpec.describe Pulsar::Client do
   before do
     skip 'set PULSAR_INTEGRATION=1 to run broker integration specs' unless ENV['PULSAR_INTEGRATION'] == '1'
   end
@@ -12,7 +12,7 @@ RSpec.describe 'Pulsar standalone integration' do
   it 'produces, receives, and acknowledges one message' do
     topic = unique_topic('single')
 
-    Pulsar::Client.open('pulsar://127.0.0.1:6650', operation_timeout: 5, connection_timeout: 5) do |client|
+    described_class.open('pulsar://127.0.0.1:6650', operation_timeout: 5, connection_timeout: 5) do |client|
       producer = client.producer(topic: topic)
       consumer = client.consumer(topic: topic, subscription: 'ruby-sub')
 
@@ -30,7 +30,7 @@ RSpec.describe 'Pulsar standalone integration' do
     topic = unique_topic('multiple')
     payloads = Array.new(5) { |index| "message-#{index}" }
 
-    Pulsar::Client.open('pulsar://127.0.0.1:6650', operation_timeout: 5, connection_timeout: 5) do |client|
+    described_class.open('pulsar://127.0.0.1:6650', operation_timeout: 5, connection_timeout: 5) do |client|
       producer = client.producer(topic: topic)
       consumer = client.consumer(topic: topic, subscription: 'ruby-sub')
 
@@ -49,7 +49,7 @@ RSpec.describe 'Pulsar standalone integration' do
     topic = unique_topic('metadata')
     event_time = (Time.now.to_f * 1000).to_i
 
-    Pulsar::Client.open('pulsar://127.0.0.1:6650', operation_timeout: 5, connection_timeout: 5) do |client|
+    described_class.open('pulsar://127.0.0.1:6650', operation_timeout: 5, connection_timeout: 5) do |client|
       producer = client.producer(topic: topic)
       consumer = client.consumer(topic: topic, subscription: 'ruby-sub')
 
@@ -73,7 +73,7 @@ RSpec.describe 'Pulsar standalone integration' do
   it 'raises timeout when receiving from an empty topic' do
     topic = unique_topic('empty')
 
-    Pulsar::Client.open('pulsar://127.0.0.1:6650', operation_timeout: 5, connection_timeout: 5) do |client|
+    described_class.open('pulsar://127.0.0.1:6650', operation_timeout: 5, connection_timeout: 5) do |client|
       consumer = client.consumer(topic: topic, subscription: 'ruby-sub')
 
       expect { consumer.receive(timeout: 0.1) }.to raise_error(Pulsar::TimeoutError)
@@ -83,7 +83,7 @@ RSpec.describe 'Pulsar standalone integration' do
   it 'consumes messages from multiple producers on the same topic' do
     topic = unique_topic('multiple-producers')
 
-    Pulsar::Client.open('pulsar://127.0.0.1:6650', operation_timeout: 5, connection_timeout: 5) do |client|
+    described_class.open('pulsar://127.0.0.1:6650', operation_timeout: 5, connection_timeout: 5) do |client|
       producer_a = client.producer(topic: topic)
       producer_b = client.producer(topic: topic)
       consumer = client.consumer(topic: topic, subscription: 'ruby-sub')
@@ -101,7 +101,7 @@ RSpec.describe 'Pulsar standalone integration' do
   it 'raises closed errors after closing producer and consumer' do
     topic = unique_topic('close')
 
-    Pulsar::Client.open('pulsar://127.0.0.1:6650', operation_timeout: 5, connection_timeout: 5) do |client|
+    described_class.open('pulsar://127.0.0.1:6650', operation_timeout: 5, connection_timeout: 5) do |client|
       producer = client.producer(topic: topic)
       consumer = client.consumer(topic: topic, subscription: 'ruby-sub')
 
@@ -117,7 +117,7 @@ RSpec.describe 'Pulsar standalone integration' do
   it 'reattaches existing producer and consumer objects after connection replacement' do
     topic = unique_topic('reconnect')
 
-    Pulsar::Client.open('pulsar://127.0.0.1:6650', operation_timeout: 5, connection_timeout: 5) do |client|
+    described_class.open('pulsar://127.0.0.1:6650', operation_timeout: 5, connection_timeout: 5) do |client|
       producer = client.producer(topic: topic)
       consumer = client.consumer(topic: topic, subscription: 'ruby-sub')
 
