@@ -7,10 +7,12 @@ extensions). The goal is a small, idiomatic API for producing and consuming mess
 local or self-hosted broker, with room to grow into TLS, authentication, batching, and
 other features over time.
 
-**Status:** MVP implementation. The public API, protocol definitions, frame
-codec, plaintext TCP transport, connection reader, producer/consumer protocol
-paths, close cleanup, and conservative reconnect are in place. Supported
-integration scenarios are verified against Pulsar standalone.
+**Status:** Published MVP prerelease. Version `0.1.0.pre` is available on
+[RubyGems](https://rubygems.org/gems/pulsar-ruby). The public API, protocol
+definitions, frame codec, plaintext TCP transport, connection reader,
+producer/consumer protocol paths, close cleanup, and conservative reconnect are
+in place. Supported integration scenarios are verified against Pulsar
+standalone.
 
 ## Requirements
 
@@ -18,14 +20,20 @@ integration scenarios are verified against Pulsar standalone.
 
 ## Installation
 
-The gem is not published on [RubyGems](https://rubygems.org/) yet. Install from GitHub:
+Install the current prerelease from [RubyGems](https://rubygems.org/gems/pulsar-ruby):
+
+```bash
+gem install pulsar-ruby --pre
+```
+
+Or add the prerelease to your Gemfile:
 
 ```ruby
 # Gemfile
-gem "pulsar-ruby", github: "killalau/pulsar-ruby"
+gem "pulsar-ruby", "0.1.0.pre"
 ```
 
-Or clone the repository and use Bundler locally:
+For local development, clone the repository and use Bundler:
 
 ```bash
 git clone https://github.com/killalau/pulsar-ruby.git
@@ -177,10 +185,11 @@ See [docs/overview.md](docs/overview.md) for the documentation index.
 
 ## MVP scope
 
-The first release targets plaintext `pulsar://` connections, single-topic producer and
-consumer workflows, unbatched messages, acknowledgements, flow control, and basic
-reconnect behavior. TLS, authentication, partitioned topics, batching, compression, and
-admin APIs are explicitly out of scope for the MVP.
+The `0.1.0.pre` release targets plaintext `pulsar://` connections,
+single-topic producer and consumer workflows, unbatched messages,
+acknowledgements, flow control, and basic reconnect behavior. TLS,
+authentication, partitioned topics, batching, compression, and admin APIs are
+explicitly out of scope for the MVP.
 
 Details: [docs/research/mvp-scope.md](docs/research/mvp-scope.md).
 
